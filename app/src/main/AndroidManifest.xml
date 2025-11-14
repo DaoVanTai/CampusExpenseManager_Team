@@ -41,6 +41,9 @@
         <activity
             android:name=".StatisticsActivity"
             android:exported="false" />
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
 
     </application>
 
