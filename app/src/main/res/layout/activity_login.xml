@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ feature/login-ui-update
+
 code-SoDo
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -45,6 +47,7 @@ code-SoDo
 
 </LinearLayout>
 
+ main
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -55,6 +58,22 @@ code-SoDo
     tools:context=".LoginActivity">
 
     <TextView
+ feature/login-ui-update
+        android:layout_width="201dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="Đăng Nhập"
+        android:textSize="32sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editTextUsername"
+        android:layout_width="369dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:hint="Tên đăng nhập"
+        android:inputType="text" />
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Đăng Nhập"
@@ -69,6 +88,7 @@ code-SoDo
         android:hint="Tên đăng nhập"
         android:inputType="text"
         android:layout_marginBottom="16dp"/>
+ main
 
     <EditText
         android:id="@+id/editTextPassword"
@@ -81,6 +101,13 @@ code-SoDo
     <Button
         android:id="@+id/buttonLogin"
         android:layout_width="match_parent"
+ feature/login-ui-update
+        android:layout_height="62dp"
+        android:text="Đăng nhập"
+        android:textSize="18sp" />
+
+</LinearLayout>
+
         android:layout_height="wrap_content"
         android:text="Đăng nhập"
         android:textSize="18sp"/>
@@ -94,3 +121,4 @@ code-SoDo
 
 </LinearLayout>
 main
+ main

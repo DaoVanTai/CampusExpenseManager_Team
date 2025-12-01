@@ -1,15 +1,28 @@
 package com.example.baitap1;
 
+ feature/login-ui-update
+import androidx.appcompat.app.AppCompatActivity;
+
+
 code-SoDo
 
 import androidx.appcompat.app.AppCompatActivity;
 
 main
+ main
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+ feature/login-ui-update
+import android.widget.Toast;
+
+public class LoginActivity extends AppCompatActivity {
+    EditText editTextUsername;
+    EditText editTextPassword;
+    Button buttonLogin;
+
 code-SoDo
 import android.widget.Toast;
 
@@ -35,10 +48,18 @@ public class LoginActivity extends AppCompatActivity {
     TextView textViewRegisterLink;
     DatabaseHelper db;
 main
+ main
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+ feature/login-ui-update
+        setContentView(R.layout.activity_login);
+
+        editTextUsername = findViewById(R.id.editTextUsername);
+        editTextPassword = findViewById(R.id.editTextPassword);
+        buttonLogin = findViewById(R.id.buttonLogin);
+
 code-SoDo
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
@@ -81,12 +102,16 @@ code-SoDo
         editTextPassword = findViewById(R.id.editTextPassword);
         buttonLogin = findViewById(R.id.buttonLogin);
         textViewRegisterLink = findViewById(R.id.textViewRegisterLink); // ID này phải có trong file activity_login.xml
+ main
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String username = editTextUsername.getText().toString();
                 String password = editTextPassword.getText().toString();
+
+ feature/login-ui-update
+                if (username.equals("admin") && password.equals("123")) {
 
                 if (username.isEmpty() || password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
@@ -97,6 +122,7 @@ code-SoDo
 
                 if (isAuthenticated) {
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+ main
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
@@ -105,6 +131,10 @@ code-SoDo
                 }
             }
         });
+ feature/login-ui-update
+    }
+}
+
         textViewRegisterLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,3 +146,4 @@ code-SoDo
     }
 }
 main
+ main

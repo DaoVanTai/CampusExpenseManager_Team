@@ -53,7 +53,21 @@ code-SoDo
             android:name=".RegisterActivity"
             android:exported="false" />
 
+ feature/login-ui-update
+        <activity android:name=".AddTransactionActivity"
+            android:exported="false"
+            android:label="Thêm Giao dịch"/>
+
+        <activity android:name=".BudgetActivity"
+            android:exported="false"
+            android:label="Kế hoạch Ngân sách"/>
+
+        <activity android:name=".AddBudgetActivity"
+            android:exported="false"
+            android:label="Thêm Ngân sách"/>
+
 main
+ main
     </application>
 
 </manifest>
