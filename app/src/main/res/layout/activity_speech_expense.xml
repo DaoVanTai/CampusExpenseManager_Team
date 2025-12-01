@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    tools:context=".MainActivity"> <TextView
+    android:id="@+id/textViewTitle"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Thêm Chi Tiêu bằng Giọng Nói"
+    android:textSize="20sp"
+    android:textStyle="bold"
+    android:layout_marginBottom="32dp"/>
+
+    <TextView
+        android:id="@+id/result_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#E0E0E0"
+        android:padding="12dp"
+        android:minLines="3"
+        android:hint="Nói vào micro để thêm chi tiêu (Ví dụ: Ăn trưa 35000 Food)"
+        android:gravity="top|start"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/mic_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:backgroundTint="?attr/colorOnSecondaryFixed"
+        android:drawableLeft="@android:drawable/ic_btn_speak_now"
+        android:padding="12dp"
+        android:text="Ghi âm Chi Tiêu"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/button_save_expense"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:backgroundTint="?android:attr/colorActivatedHighlight"
+        android:enabled="false"
+        android:padding="15dp"
+        android:text="Lưu"
+        android:textSize="16sp" />
+
+</LinearLayout>

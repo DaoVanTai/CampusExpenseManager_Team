@@ -6,29 +6,46 @@ import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-public class MainActivity extends AppCompatActivity {
+
+// ⭐ ĐẢM BẢO DÒNG IMPORT NÀY KHÔNG BỊ LỖI ⭐
+
+
+public class MainActivity extends AppCompatActivity { // Đây là định nghĩa lớp chính
+
     private Button btnCreate;
     private Button btnOpenAppData;
     private Button btnStatistics;
+
+    // Khai báo Button mới cho chức năng Voice Expense
+    private Button btnVoiceExpense;
+
     private ListView lvTasks;
     private ArrayAdapter<String> adapter;
     private AppData appData;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         appData = AppData.getInstance();
+
+        // Ánh xạ các Button cũ
         btnCreate = findViewById(R.id.btnCreate);
         btnOpenAppData = findViewById(R.id.btnOpenAppData);
         btnStatistics = findViewById(R.id.btnStatistics);
+
+        // Ánh xạ Button mới (Đảm bảo ID này tồn tại trong activity_main.xml)
+        btnVoiceExpense = findViewById(R.id.button_voice_expense);
+
         lvTasks = findViewById(R.id.lvTasks);
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, appData.taskList);
         lvTasks.setAdapter(adapter);
 
+        // Thiết lập Listener cho các nút cũ (Giữ nguyên)
         btnCreate.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CreateNewTaskActivity.class);
             startActivity(intent);
@@ -41,6 +58,16 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, StatisticsActivity.class);
             startActivity(intent);
         });
+
+        // ⭐ LISTENER MỚI ĐÃ SỬA LỖI INTENT TARGET ⭐
+        btnVoiceExpense.setOnClickListener(v -> {
+            // Chuyển sang Activity xử lý ghi âm và lưu chi tiêu
+            // Mục tiêu phải là Activity (AddExpenseByVoiceActivity) chứ không phải Helper Class
+            Intent intent = new Intent(MainActivity.this, AddExpenseByVoiceActivity.class);
+            startActivity(intent);
+        });
+
+        // Thiết lập Listener cho ListView cũ (Giữ nguyên)
         lvTasks.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(MainActivity.this, editTask.class);
             intent.putExtra("TASK_CONTENT", appData.taskList.get(position));
@@ -49,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
     }
+
+    // onResume() cũ (Giữ nguyên)
     @Override
     protected void onResume() {
         super.onResume();
@@ -56,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
         }
     }
+
+    // onActivityResult() cũ (Giữ nguyên)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
