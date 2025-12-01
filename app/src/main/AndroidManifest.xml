@@ -44,6 +44,8 @@
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />
+        <activity android:name=".NoteListActivity" android:exported="false" />
+        <activity android:name=".addNoteActivity" android:exported="false" />
 
     </application>
 
