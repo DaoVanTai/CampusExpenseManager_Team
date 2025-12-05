@@ -1,15 +1,21 @@
 package com.example.baitap1;
 
+ code-moi-cua-toi
+import androidx.appcompat.app.AppCompatActivity;
+
 code-SoDo
 import android.content.SharedPreferences;
 
 import androidx.appcompat.app.AppCompatActivity;
 main
+ main
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+ code-moi-cua-toi
 
 code-SoDo
 import androidx.activity.EdgeToEdge;
@@ -22,16 +28,22 @@ public class RegisterActivity extends AppCompatActivity {
     EditText edtEmailReg, edtPasswordReg, edtConfirmPassword;
     Button btnRegister, btnBackLogin;
 
+ main
 public class RegisterActivity extends AppCompatActivity {
 
     EditText editTextUsername, editTextPassword, editTextConfirmPassword;
     Button buttonRegister;
     DatabaseHelper db;
+ code-moi-cua-toi
+
 main
+ main
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+ code-moi-cua-toi
+
 code-SoDo
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_register);
@@ -71,6 +83,7 @@ code-SoDo
                 Toast.makeText(RegisterActivity.this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
                 finish(); // quay về login
 
+ main
         setContentView(R.layout.activity_register);
 
         db = new DatabaseHelper(this);
@@ -106,7 +119,10 @@ code-SoDo
                         Toast.makeText(RegisterActivity.this, "Mật khẩu không khớp", Toast.LENGTH_SHORT).show();
                     }
                 }
+ code-moi-cua-toi
+
 main
+ main
             }
         });
     }
