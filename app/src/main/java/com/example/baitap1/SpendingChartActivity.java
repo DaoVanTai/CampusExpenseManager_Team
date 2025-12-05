@@ -1,16 +1,28 @@
 package com.example.baitap1;
 
-import android.graphics.Color; // Thêm import màu
+
+import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
+import java.util.ArrayList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView; // Thêm import
-import android.widget.ArrayAdapter; // Thêm import
-import android.widget.Spinner; // Thêm import
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
-// Import đầy đủ thư viện Chart
+
+import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.data.Entry;
@@ -21,7 +33,11 @@ import java.util.ArrayList;
 
 public class SpendingChartActivity extends AppCompatActivity {
 
-    // 1. KHAI BÁO BIẾN Ở ĐÂY (QUAN TRỌNG)
+    private ImageButton btnBack;
+    private RadioGroup radioGroupTime;
+    private BarChart barChart;
+
+
     private LineChart lineChart;
     private Spinner spinnerFilter;
 
@@ -31,91 +47,92 @@ public class SpendingChartActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_spending_chart);
 
-        // 2. Ánh xạ
-        lineChart = findViewById(R.id.lineChart);
-        spinnerFilter = findViewById(R.id.spinnerFilter);
+        // 1. Ánh xạ View
+        btnBack = findViewById(R.id.btnBack);
+        radioGroupTime = findViewById(R.id.radioGroupTime);
+        barChart = findViewById(R.id.chartSpending);
 
-        // Cấu hình Spinner
-        String[] filters = {"Ngày", "Tuần", "Tháng"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, filters);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerFilter.setAdapter(adapter);
-
-        // Bắt sự kiện chọn Spinner
-        spinnerFilter.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // 2. Xử lý nút Quay lại MainActivity
+        btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (position) {
-                    case 0:
-                        showDailyChart();
-                        break;
-                    case 1:
-                        showWeeklyChart();
-                        break;
-                    case 2:
-                        showMonthlyChart();
-                        break;
+            public void onClick(View v) {
+                // Đóng Activity này để quay về màn hình trước (MainActivity)
+                finish();
+            }
+        });
+
+        // 3. Cấu hình giao diện biểu đồ ban đầu
+        setupChartConfig();
+
+        // 4. Load dữ liệu mặc định (Theo Ngày)
+        loadChartData(0);
+
+        // 5. Xử lý sự kiện chọn Ngày/Tháng/Năm
+        radioGroupTime.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.rbDay) {
+                    loadChartData(0); // 0: Ngày
+                } else if (checkedId == R.id.rbMonth) {
+                    loadChartData(1); // 1: Tháng
+                } else if (checkedId == R.id.rbYear) {
+                    loadChartData(2); // 2: Năm
                 }
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) { }
         });
     }
 
-    private void showDailyChart() {
-        ArrayList<Entry> entries = new ArrayList<>();
-        // Giả lập dữ liệu ngày
-        float[] spending = {50, 70, 20, 100, 40, 60, 30};
-        for (int i = 0; i < spending.length; i++) {
-            entries.add(new Entry(i, spending[i]));
-        }
-        drawChart(entries, "Chi tiêu hằng ngày");
+    // --- CẤU HÌNH BIỂU ĐỒ ---
+    private void setupChartConfig() {
+        if (barChart == null) return;
+
+        barChart.getDescription().setEnabled(false); // Tắt dòng mô tả nhỏ
+        barChart.setDrawGridBackground(false);
+        barChart.animateY(1000); // Hiệu ứng chạy lên trong 1 giây (Sửa lại lệnh này cho đúng thư viện)
+
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Đưa chữ xuống đáy
+        xAxis.setGranularity(1f);
+        xAxis.setDrawGridLines(false);
     }
 
-    private void showWeeklyChart() {
-        ArrayList<Entry> entries = new ArrayList<>();
-        // Giả lập dữ liệu tuần
-        float[] spending = {300, 450, 250, 500};
-        for (int i = 0; i < spending.length; i++) {
-            entries.add(new Entry(i, spending[i]));
+    // --- HÀM LOAD DỮ LIỆU ---
+    private void loadChartData(int type) {
+        ArrayList<BarEntry> entries = new ArrayList<>();
+        String[] labels; // Nhãn trục hoành (T2, T3...)
+
+        if (type == 0) {
+            // --- THEO NGÀY ---
+            entries.add(new BarEntry(0, 50000));
+            entries.add(new BarEntry(1, 80000));
+            entries.add(new BarEntry(2, 30000));
+            labels = new String[]{"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
+        } else if (type == 1) {
+            // --- THEO THÁNG ---
+            entries.add(new BarEntry(0, 1500000));
+            entries.add(new BarEntry(1, 2000000));
+            labels = new String[]{"T1", "T2", "T3", "T4", "T5", "T6"};
+        } else {
+            // --- THEO NĂM ---
+            entries.add(new BarEntry(0, 12000000));
+            entries.add(new BarEntry(1, 15000000));
+            labels = new String[]{"2023", "2024", "2025"};
         }
-        drawChart(entries, "Chi tiêu theo tuần");
-    }
 
-    private void showMonthlyChart() {
-        ArrayList<Entry> entries = new ArrayList<>();
-        // Giả lập dữ liệu tháng
-        float[] spending = {1000, 1200, 900, 1500, 1300, 1600, 1400, 1800, 1100, 1700, 1900, 2000};
-        for (int i = 0; i < spending.length; i++) {
-            entries.add(new Entry(i, spending[i]));
+        // Tạo DataSet và đổ dữ liệu
+        BarDataSet dataSet = new BarDataSet(entries, "Chi tiêu (VNĐ)");
+        dataSet.setColors(ColorTemplate.MATERIAL_COLORS); // Màu sắc
+        dataSet.setValueTextSize(12f);
+
+        BarData data = new BarData(dataSet);
+        barChart.setData(data);
+
+        // Gán nhãn cho trục X (Nếu mảng labels ngắn hơn dữ liệu thì coi chừng lỗi Index)
+        // Code an toàn: Chỉ gán formatter nếu số lượng label khớp
+        if (labels.length > 0) {
+            barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
         }
-        drawChart(entries, "Chi tiêu theo tháng");
-    }
 
-    private void drawChart(ArrayList<Entry> entries, String label) {
-        LineDataSet dataSet = new LineDataSet(entries, label);
-
-        // Trang trí đường kẻ
-        dataSet.setLineWidth(3f);
-        dataSet.setCircleRadius(5f);
-        dataSet.setColor(Color.BLUE); // Màu đường
-        dataSet.setCircleColor(Color.RED); // Màu chấm tròn
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Đường cong mềm mại
-
-        LineData lineData = new LineData(dataSet);
-        lineChart.setData(lineData);
-
-        // 3. SỬA LỖI DESCRIPTION (Cách chuẩn cho v3.1.0)
-        Description description = new Description();
-        description.setText(label);
-        description.setTextColor(Color.BLACK);
-        description.setTextSize(12f);
-        lineChart.setDescription(description);
-
-        // Refresh biểu đồ
-        lineChart.notifyDataSetChanged();
-        lineChart.invalidate();
-        lineChart.animateX(1000); // Thêm hiệu ứng chạy chạy cho đẹp
+        barChart.invalidate(); // Vẽ lại biểu đồ
     }
 }

@@ -3,43 +3,54 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
+    android:padding="30dp"
     android:gravity="center"
-    android:background="#FFFFFF">
+    android:background="#E0F7FA">
 
     <TextView
-        android:text="LOGIN"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="40dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="ĐĂNG NHẬP"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="#006064"
+        android:layout_marginBottom="40dp"/>
 
     <EditText
-        android:id="@+id/edtEmail"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
+        android:id="@+id/etUser"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="Tên đăng nhập"
+        android:background="@android:drawable/edit_text"
         android:padding="12dp"
-        android:background="@android:drawable/edit_text" />
+        android:layout_marginBottom="20dp"/>
 
     <EditText
-        android:id="@+id/edtPassword"
-        android:hint="Password"
+        android:id="@+id/etPass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Mật khẩu"
         android:inputType="textPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:background="@android:drawable/edit_text"
         android:padding="12dp"
-        android:layout_marginTop="16dp"
-        android:background="@android:drawable/edit_text" />
+        android:layout_marginBottom="30dp"/>
 
     <Button
         android:id="@+id/btnLogin"
-        android:text="Login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:padding="12dp" />
+        android:text="ĐĂNG NHẬP"
+        android:backgroundTint="#0097A7"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/tvGoToRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chưa có tài khoản? Đăng ký ngay"
+        android:textColor="#006064"
+        android:textStyle="italic"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"/>
 
 </LinearLayout>
