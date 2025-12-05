@@ -1,124 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
- feature/login-ui-update
-
-code-SoDo
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="#FFFFFF">
-
-    <TextView
-        android:text="LOGIN"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="40dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:id="@+id/edtEmail"
-        android:hint="Email"
-        android:inputType="textEmailAddress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@android:drawable/edit_text" />
-
-    <EditText
-        android:id="@+id/edtPassword"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:layout_marginTop="16dp"
-        android:background="@android:drawable/edit_text" />
-
-    <Button
-        android:id="@+id/btnLogin"
-        android:text="Login"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:padding="12dp" />
-
-</LinearLayout>
-
- main
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp"
+    android:background="#FFFFFF"
     tools:context=".LoginActivity">
 
+    <!-- Tiêu đề -->
     <TextView
- feature/login-ui-update
-        android:layout_width="201dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         android:text="Đăng Nhập"
         android:textSize="32sp"
-        android:textStyle="bold" />
-
-    <EditText
-        android:id="@+id/editTextUsername"
-        android:layout_width="369dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:hint="Tên đăng nhập"
-        android:inputType="text" />
-
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Đăng Nhập"
-        android:textSize="32sp"
         android:textStyle="bold"
-        android:layout_marginBottom="32dp"/>
+        android:textColor="#000000"/>
 
+    <!-- Ô nhập Tên đăng nhập -->
     <EditText
         android:id="@+id/editTextUsername"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
         android:hint="Tên đăng nhập"
         android:inputType="text"
-        android:layout_marginBottom="16dp"/>
- main
+        android:background="@android:drawable/edit_text" />
 
+    <!-- Ô nhập Mật khẩu -->
     <EditText
         android:id="@+id/editTextPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:padding="12dp"
         android:hint="Mật khẩu"
         android:inputType="textPassword"
-        android:layout_marginBottom="24dp"/>
+        android:background="@android:drawable/edit_text" />
 
+    <!-- Nút Đăng nhập -->
     <Button
         android:id="@+id/buttonLogin"
         android:layout_width="match_parent"
- feature/login-ui-update
-        android:layout_height="62dp"
-        android:text="Đăng nhập"
-        android:textSize="18sp" />
-
-</LinearLayout>
-
         android:layout_height="wrap_content"
         android:text="Đăng nhập"
-        android:textSize="18sp"/>
+        android:textSize="18sp"
+        android:padding="12dp" />
+
+    <!-- Link chuyển sang đăng ký -->
     <TextView
         android:id="@+id/textViewRegisterLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Chưa có tài khoản? Đăng ký ngay"
         android:layout_marginTop="16dp"
-        android:textColor="@color/purple_500" />
+        android:textSize="16sp"
+        android:textColor="#6200EE"
+        android:textStyle="italic"/>
 
 </LinearLayout>
-main
- main

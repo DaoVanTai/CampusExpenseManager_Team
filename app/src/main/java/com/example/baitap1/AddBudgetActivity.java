@@ -1,8 +1,12 @@
-// File: com.example.baitap1.AddBudgetActivity.java
 package com.example.baitap1;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -22,29 +26,38 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class AddBudgetActivity extends AppCompatActivity {
 
     private TextInputEditText etLimitAmount;
     private Spinner spinnerCategory;
     private Button btnSelectStartDate, btnSelectEndDate, btnSaveBudget;
-    private TextView tvStartDate, tvEndDate; // tvStartDate hiển thị ngày đã chọn
+    private TextView tvStartDate, tvEndDate;
 
     private TransactionViewModel transactionViewModel;
     private List<Category> allCategories = new ArrayList<>();
 
-    // Khởi tạo timestamp mặc định là đầu tháng hiện tại và cuối tháng hiện tại
     private long startDateTimestamp = 0;
     private long endDateTimestamp = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // *** SỬA LỖI: Sử dụng layout mới đã tạo cho Budget ***
+
+        // 1. Kích hoạt chế độ tràn viền
+        EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_add_budget);
 
-        // 1. Ánh xạ View (Sử dụng ID từ activity_add_budget.xml)
+        // 2. Xử lý Insets để tránh nội dung bị che bởi thanh trạng thái/điều hướng
+        // Lưu ý: Layout gốc trong file activity_add_budget.xml cần có android:id="@+id/main"
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        // Ánh xạ View
         etLimitAmount = findViewById(R.id.et_limit_amount);
         spinnerCategory = findViewById(R.id.spinner_budget_category);
         btnSelectStartDate = findViewById(R.id.btn_select_start_date);
@@ -53,25 +66,18 @@ public class AddBudgetActivity extends AppCompatActivity {
         tvStartDate = findViewById(R.id.tv_start_date);
         tvEndDate = findViewById(R.id.tv_end_date);
 
-        // 2. Khởi tạo ViewModel
         transactionViewModel = new ViewModelProvider(this).get(TransactionViewModel.class);
 
-        // 3. Khởi tạo ngày mặc định và hiển thị
         initDefaultDates();
-
-        // 4. Load Danh mục
         loadCategories();
 
-        // 5. Thiết lập sự kiện chọn ngày
         btnSelectStartDate.setOnClickListener(v -> showDatePickerDialog(true)); // true: ngày bắt đầu
         btnSelectEndDate.setOnClickListener(v -> showDatePickerDialog(false)); // false: ngày kết thúc
 
-        // 6. Thiết lập sự kiện Lưu Ngân sách
         btnSaveBudget.setOnClickListener(v -> saveBudget());
     }
 
     private void initDefaultDates() {
-        // Đặt ngày bắt đầu là đầu tháng hiện tại
         Calendar start = Calendar.getInstance();
         start.set(Calendar.DAY_OF_MONTH, 1);
         start.set(Calendar.HOUR_OF_DAY, 0);
@@ -81,10 +87,8 @@ public class AddBudgetActivity extends AppCompatActivity {
         startDateTimestamp = start.getTimeInMillis();
         updateDateTextView(startDateTimestamp, true);
 
-        // Đặt ngày kết thúc là cuối tháng hiện tại
         Calendar end = Calendar.getInstance();
         end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
-        // Đặt thời gian là cuối ngày để bao gồm cả ngày đó (23:59:59.999)
         end.set(Calendar.HOUR_OF_DAY, 23);
         end.set(Calendar.MINUTE, 59);
         end.set(Calendar.SECOND, 59);
@@ -97,16 +101,18 @@ public class AddBudgetActivity extends AppCompatActivity {
         transactionViewModel.allCategories.observe(this, categories -> {
             allCategories = categories;
             List<String> categoryNames = new ArrayList<>();
-            categoryNames.add("TỔNG (Ngân sách chung)"); // Lựa chọn 0
+            categoryNames.add("TỔNG (Ngân sách chung)");
             for (Category category : categories) {
-                categoryNames.add(category.getName()); // Lựa chọn 1...n
+                categoryNames.add(category.getName());
             }
 
+            // Sử dụng layout dropdown chuẩn của Android để đẹp hơn
             ArrayAdapter<String> adapter = new ArrayAdapter<>(
                     this,
-                    android.R.layout.simple_spinner_dropdown_item,
+                    android.R.layout.simple_spinner_item,
                     categoryNames
             );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerCategory.setAdapter(adapter);
         });
     }
@@ -128,7 +134,6 @@ public class AddBudgetActivity extends AppCompatActivity {
                     Calendar c = Calendar.getInstance();
                     c.set(y, m, d);
 
-                    // Thiết lập thời gian (đầu ngày cho StartDate, cuối ngày cho EndDate)
                     if (isStartDate) {
                         c.set(Calendar.HOUR_OF_DAY, 0);
                         c.set(Calendar.MINUTE, 0);
@@ -147,7 +152,6 @@ public class AddBudgetActivity extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    // Hàm cập nhật TextView hiển thị ngày
     private void updateDateTextView(long timestamp, boolean isStartDate) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         String dateString = sdf.format(new java.util.Date(timestamp));
@@ -167,25 +171,32 @@ public class AddBudgetActivity extends AppCompatActivity {
             return;
         }
 
-        // 1. Kiểm tra ngày hợp lệ
         if (startDateTimestamp == 0 || endDateTimestamp == 0) {
             Toast.makeText(this, "Vui lòng chọn đầy đủ Ngày bắt đầu và Ngày kết thúc.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // So sánh: Ngày Bắt đầu phải nhỏ hơn hoặc bằng Ngày Kết thúc
         if (startDateTimestamp >= endDateTimestamp) {
             Toast.makeText(this, "Ngày Bắt đầu phải trước Ngày Kết thúc.", Toast.LENGTH_LONG).show();
             return;
         }
 
-        double limit = Double.parseDouble(amountStr);
+        double limit;
+        try {
+            limit = Double.parseDouble(amountStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Số tiền không hợp lệ.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         int selectedPosition = spinnerCategory.getSelectedItemPosition();
 
-        int categoryId = 0; // Mặc định 0 là Ngân sách TỔNG
-        if (selectedPosition > 0) {
-            // Lấy ID của Category, vì vị trí 0 là "TỔNG"
-            categoryId = allCategories.get(selectedPosition - 1).getId();
+        int categoryId = 0; // Mặc định là 0 (Tổng)
+        if (selectedPosition > 0 && !allCategories.isEmpty()) {
+            // Kiểm tra index để tránh IndexOutOfBoundsException
+            if (selectedPosition - 1 < allCategories.size()) {
+                categoryId = allCategories.get(selectedPosition - 1).getId();
+            }
         }
 
         Budget newBudget = new Budget(
@@ -195,8 +206,6 @@ public class AddBudgetActivity extends AppCompatActivity {
                 categoryId
         );
 
-        // 2. Thêm vào cơ sở dữ liệu qua ViewModel
-        // *** LƯU Ý: Đảm bảo đã thêm hàm insertBudget(Budget budget) vào TransactionViewModel ***
         transactionViewModel.insertBudget(newBudget);
 
         Toast.makeText(this, "Đã lưu kế hoạch ngân sách thành công!", Toast.LENGTH_SHORT).show();

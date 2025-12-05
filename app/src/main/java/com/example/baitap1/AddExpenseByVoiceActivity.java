@@ -1,143 +1,223 @@
-package com.example.baitap1; // ⭐ Đảm bảo package này là đúng cho dự án của bạn ⭐
+package com.example.baitap1;
 
-import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.util.Log;
+import android.text.TextUtils;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
-// SỬ DỤNG LẠI DatabaseHelper từ package chính
-// SỬ DỤNG LẠI SpeechRecognizerHelper từ package của nó
-import com.example.baitap1.SpeechRecognizerHelper; // ⭐ Thay bằng package đúng nếu SpeechRecognizerHelper ở package khác ⭐
+import com.example.baitap1.viewmodel.TransactionViewModel;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AddExpenseByVoiceActivity extends AppCompatActivity {
 
-    private static final String TAG = "VoiceExpenseActivity";
+    // Khai báo các biến UI
+    private TextView tvRecognizedText;
+    private EditText etAmount, etCategory, etDescription, etDate;
+    private ImageButton btnMic;
+    private Button btnSave;
 
-    // UI Components
-    private TextView resultTextView;
-    private Button micButton;
-    private Button saveButton;
+    // ViewModel để xử lý database (nếu cần dùng)
+    private TransactionViewModel transactionViewModel;
 
-    // Helpers
-    private SpeechRecognizerHelper speechHelper;
-    private DatabaseHelper dbHelper;
-
-    // Biến tạm lưu trữ văn bản đã được nhận dạng
-    private String recognizedText = "";
+    // Mã request cho Intent giọng nói
+    private static final int REQ_CODE_SPEECH_INPUT = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // ⭐ KẾT NỐI GIAO DIỆN XML ⭐
-        setContentView(R.layout.activity_speech_expense);
 
-        // 1. Khởi tạo UI
-        resultTextView = findViewById(R.id.result_text_view);
-        micButton = findViewById(R.id.mic_button);
-        saveButton = findViewById(R.id.button_save_expense);
+        // 1. Kích hoạt chế độ tràn viền
+        EdgeToEdge.enable(this);
 
-        // 2. Khởi tạo Helpers
-        speechHelper = new SpeechRecognizerHelper(this);
-        dbHelper = new DatabaseHelper(this);
+        setContentView(R.layout.activity_add_expense_by_voice);
 
-        // 3. Listener cho nút GHI ÂM (Bắt đầu quá trình STT)
-        micButton.setOnClickListener(v -> {
-            recognizedText = "";
-            resultTextView.setText("");
-            saveButton.setEnabled(false);
-            saveButton.setAlpha(0.5f);
-
-            speechHelper.startListening(); // Gọi helper để gửi Intent ghi âm
+        // 2. Xử lý Insets (Tránh bị tai thỏ/camera che mất)
+        // Yêu cầu: File XML activity_add_expense_by_voice.xml phải có ID root là "main"
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
         });
 
-        // 4. Listener cho nút LƯU (Xử lý và lưu vào DB)
-        saveButton.setOnClickListener(v -> {
-            if (!recognizedText.isEmpty()) {
-                processAndSaveExpense(recognizedText);
-            } else {
-                Toast.makeText(this, "Vui lòng ghi âm chi tiêu trước.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Khởi tạo ViewModel (chuẩn bị cho việc lưu DB)
+        transactionViewModel = new ViewModelProvider(this).get(TransactionViewModel.class);
 
-        saveButton.setEnabled(false);
-        saveButton.setAlpha(0.5f);
+        // Ánh xạ View
+        initViews();
+
+        // Tự động điền ngày hiện tại
+        etDate.setText(getCurrentDate());
+
+        // Sự kiện bấm nút Mic
+        btnMic.setOnClickListener(v -> startVoiceInput());
+
+        // Sự kiện bấm nút Lưu
+        btnSave.setOnClickListener(v -> saveExpense());
     }
 
-    // ------------------------------------------------------------------
-    // ⭐ PHƯƠNG THỨC BẮT KẾT QUẢ GHI ÂM (STT) ⭐
-    // ------------------------------------------------------------------
+    private void initViews() {
+        tvRecognizedText = findViewById(R.id.tvRecognizedText);
+        etAmount = findViewById(R.id.etAmount);
+        etCategory = findViewById(R.id.etCategory);
+        etDescription = findViewById(R.id.etDescription);
+        etDate = findViewById(R.id.etDate);
+        btnMic = findViewById(R.id.btnMic);
+        btnSave = findViewById(R.id.btnSave);
+    }
 
+    // Hàm gọi Google Voice Input
+    private void startVoiceInput() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault()); // Tự động lấy ngôn ngữ máy (thường là vi-VN)
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Nói chi tiêu của bạn (VD: Ăn sáng 30 nghìn)");
+
+        try {
+            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(getApplicationContext(), "Thiết bị không hỗ trợ nhận diện giọng nói", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Nhận kết quả trả về từ Google Voice
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == SpeechRecognizerHelper.SPEECH_REQUEST_CODE) {
+        if (requestCode == REQ_CODE_SPEECH_INPUT) {
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (result != null && !result.isEmpty()) {
+                    String spokenText = result.get(0);
+                    tvRecognizedText.setText("Bạn đã nói: " + spokenText);
 
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                ArrayList<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
-                if (results != null && !results.isEmpty()) {
-                    String spokenText = results.get(0);
-
-                    recognizedText = spokenText;
-                    resultTextView.setText(recognizedText);
-
-                    saveButton.setEnabled(true);
-                    saveButton.setAlpha(1.0f);
-
-                } else {
-                    resultTextView.setText("Không nhận dạng được văn bản.");
+                    // Xử lý thông minh: Tự động điền form dựa trên câu nói
+                    processVoiceCommand(spokenText);
                 }
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                Toast.makeText(this, "Đã hủy ghi âm.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    // ------------------------------------------------------------------
-    // ⭐ PHƯƠNG THỨC PHÂN TÍCH VÀ LƯU VÀO DATABASE ⭐
-    // ------------------------------------------------------------------
+    // LOGIC THÔNG MINH: Phân tích câu nói để tách Tiền và Danh mục
+    private void processVoiceCommand(String text) {
+        String lowerText = text.toLowerCase();
 
-    private void processAndSaveExpense(String textToParse) {
-        // Giả định cú pháp: Mô_tả Số_tiền Danh_mục
-        String[] parts = textToParse.split(" ");
+        // 1. Tự động điền mô tả là toàn bộ câu nói
+        etDescription.setText(text);
 
-        if (parts.length >= 3) {
-            String description = parts[0];
-            String category = parts[2];
-            double amount;
+        // 2. Xử lý số tiền (Tìm các số trong chuỗi)
+        long amount = extractAmount(lowerText);
+        if (amount > 0) {
+            // Định dạng số nguyên cho đẹp (bỏ .0)
+            etAmount.setText(String.valueOf(amount));
+        }
 
+        // 3. Xử lý danh mục (Dựa trên từ khóa)
+        String category = detectCategory(lowerText);
+        etCategory.setText(category);
+    }
+
+    private long extractAmount(String text) {
+        // Regex tìm chuỗi số liên tiếp
+        Pattern p = Pattern.compile("\\d+");
+        Matcher m = p.matcher(text);
+
+        long value = 0;
+        // Tìm số đầu tiên hoặc số hợp lý nhất
+        if (m.find()) {
             try {
-                amount = Double.parseDouble(parts[1]);
+                value = Long.parseLong(m.group());
+
+                // Xử lý đơn vị tiền tệ việt nam nói tắt
+                if (text.contains("nghìn") || text.contains(" nghìn") || text.matches(".*\\d+k.*")) {
+                    value *= 1000;
+                } else if (text.contains("trăm")) {
+                    value *= 100;
+                } else if (text.contains("triệu")) {
+                    value *= 1000000;
+                }
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "LƯU LỖI: Số tiền không hợp lệ. Hãy kiểm tra lại văn bản.", Toast.LENGTH_LONG).show();
-                return;
+                e.printStackTrace();
             }
+        }
+        return value;
+    }
 
-            // Gọi hàm thêm vào DatabaseHelper (Đã được cập nhật ở bước trước)
-            boolean success = dbHelper.addExpense(description, amount, category);
+    private String detectCategory(String text) {
+        if (text.contains("ăn") || text.contains("uống") || text.contains("cafe") || text.contains("cơm") || text.contains("phở")) {
+            return "Ăn uống";
+        } else if (text.contains("xe") || text.contains("xăng") || text.contains("grab") || text.contains("bus") || text.contains("gửi")) {
+            return "Đi lại";
+        } else if (text.contains("nhà") || text.contains("điện") || text.contains("nước") || text.contains("wifi") || text.contains("net")) {
+            return "Sinh hoạt phí";
+        } else if (text.contains("học") || text.contains("sách") || text.contains("vở") || text.contains("bút")) {
+            return "Học tập";
+        } else if (text.contains("áo") || text.contains("quần") || text.contains("giày") || text.contains("mua")) {
+            return "Mua sắm";
+        }
+        return "Khác"; // Mặc định nếu không tìm thấy từ khóa
+    }
 
-            if (success) {
-                Toast.makeText(this, "✅ ĐÃ LƯU: " + description + " (" + amount + ")", Toast.LENGTH_LONG).show();
-                // Reset UI
-                resultTextView.setText("Chi tiêu đã được lưu. Hãy ghi âm khoản mới.");
-                recognizedText = "";
-                saveButton.setEnabled(false);
-                saveButton.setAlpha(0.5f);
-            } else {
-                Toast.makeText(this, "❌ LỖI LƯU CHI TIÊU VÀO DATABASE.", Toast.LENGTH_SHORT).show();
-            }
+    private String getCurrentDate() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return sdf.format(new Date());
+    }
 
-        } else {
-            Toast.makeText(this, "LƯU LỖI: Cú pháp không đủ 3 phần (Mô tả - Số tiền - Danh mục).", Toast.LENGTH_LONG).show();
+    // Lưu vào Database
+    private void saveExpense() {
+        String amountStr = etAmount.getText().toString().trim();
+        String categoryName = etCategory.getText().toString().trim();
+        String description = etDescription.getText().toString().trim();
+        // String date = etDate.getText().toString().trim(); // Bạn có thể cần parse date này sang Timestamp nếu Model yêu cầu
+
+        if (TextUtils.isEmpty(amountStr)) {
+            Toast.makeText(this, "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            double amount = Double.parseDouble(amountStr);
+
+            // --- KHU VỰC DATABASE (Tương tự AddBudgetActivity) ---
+            // Bạn cần tạo đối tượng Transaction ở đây và gọi ViewModel
+
+            // Ví dụ mẫu (Bạn hãy bỏ comment và chỉnh sửa cho đúng Constructor của nhóm bạn):
+            /*
+            Transaction newTransaction = new Transaction(
+                amount,
+                categoryName, // Hoặc categoryId nếu bạn quản lý theo ID
+                description,
+                System.currentTimeMillis() // Hoặc parse từ etDate
+            );
+            transactionViewModel.insertTransaction(newTransaction);
+            */
+
+            Toast.makeText(this, "Đã lưu: " + categoryName + " - " + amountStr, Toast.LENGTH_SHORT).show();
+            finish();
+
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
         }
     }
 }
