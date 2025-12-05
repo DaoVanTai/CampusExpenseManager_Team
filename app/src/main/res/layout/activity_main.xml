@@ -19,20 +19,40 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="#FF9800" />
+ code-moi-cua-toi
+    <!-- Tiêu đề (Optional - Thêm vào cho đẹp) -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="QUẢN LÝ CHI TIÊU"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- HÀNG 1: 3 Nút chức năng chính -->
 
     <!-- Hàng nút chức năng trên cùng -->
+ main
     <Button
         android:id="@+id/btnCreate"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+ code-moi-cua-toi
+        android:layout_marginTop="24dp"
+
         android:layout_marginTop="16dp"
+ main
         android:layout_marginEnd="4dp"
         android:text="Thêm mới"
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@+id/btnOpenAppData"
         app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
     <Button
         android:id="@+id/btnOpenAppData"
@@ -46,6 +66,10 @@
         app:layout_constraintStart_toEndOf="@+id/btnCreate"
         app:layout_constraintTop_toTopOf="@+id/btnCreate" />
 
+ code-moi-cua-toi
+    <!-- Nút Thống kê (Chức năng 1) -->
+
+ main
     <Button
         android:id="@+id/btnStatistics"
         android:layout_width="0dp"
@@ -53,9 +77,25 @@
         android:layout_marginStart="4dp"
         android:text="Thống Kê"
         android:textSize="12sp"
+        android:backgroundTint="#4CAF50"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btnOpenAppData"
         app:layout_constraintTop_toTopOf="@+id/btnCreate" />
+
+ code-moi-cua-toi
+    <!-- HÀNG 2: Nút Cài đặt Định kỳ (Chức năng 2 - MỚI) -->
+    <Button
+        android:id="@+id/btnRecurring"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Cài Đặt Chi Phí Định Kỳ"
+        android:backgroundTint="#FF9800"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnCreate" />
+
+    <!-- HÀNG 3: Nút Voice (Đã sửa lỗi constraint) -->
 
     <!-- Nút xem biểu đồ -->
     <Button
@@ -73,22 +113,34 @@
         app:layout_constraintTop_toBottomOf="@+id/btnOpenAppData" />
 
     <!-- Nút thêm bằng giọng nói (Fix lỗi conflict ở đây) -->
+ main
     <Button
         android:id="@+id/button_voice_expense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+ code-moi-cua-toi
+        android:text="🎙️ Thêm Chi Tiêu Bằng Giọng Nói"
+        android:layout_marginTop="8dp"
+
         android:layout_marginTop="8dp"
         android:text="🎙️ Thêm Chi Tiêu Bằng Giọng Nói"
+ main
         android:padding="12dp"
         android:backgroundTint="#007BFF"
         android:textColor="@android:color/white"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+ code-moi-cua-toi
+        app:layout_constraintTop_toBottomOf="@+id/btnRecurring" />
+
+    <!-- Danh sách hiển thị bên dưới cùng -->
+
         app:layout_constraintTop_toBottomOf="@+id/btnViewChart" />
 
     <!-- Danh sách công việc (ListView) -->
     <!-- Đã chỉnh constraint nằm dưới nút Voice và trên nút Back -->
+ main
     <ListView
         android:id="@+id/lvTasks"
         android:layout_width="0dp"
@@ -99,6 +151,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_voice_expense" />
+ code-moi-cua-toi
+
 
     <!-- Nút Back (Quay lại đăng nhập) -->
     <Button
@@ -109,5 +163,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+ main
 
 </androidx.constraintlayout.widget.ConstraintLayout>

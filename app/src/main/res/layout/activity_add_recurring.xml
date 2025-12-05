@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView android:text="Thêm Chi Phí Định Kỳ" android:textSize="24sp" android:layout_marginBottom="20dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+    <EditText android:id="@+id/etRecDesc" android:hint="Mô tả (Vd: Tiền trọ)" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <EditText android:id="@+id/etRecAmount" android:hint="Số tiền" android:inputType="numberDecimal" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <EditText android:id="@+id/etRecCategory" android:hint="Danh mục (Vd: Nhà ở)" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <EditText android:id="@+id/etRecDay" android:hint="Ngày trả hàng tháng (1-31)" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+    <Button android:id="@+id/btnRecSave" android:text="Lưu Thiết Lập" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp"/>
+</LinearLayout>

@@ -1,5 +1,9 @@
 package com.example.baitap1;
 
+ code-moi-cua-toi
+import androidx.appcompat.app.AppCompatActivity;
+
+
  feature/login-ui-update
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 main
  main
+ main
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -18,6 +23,12 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import android.widget.TextView;
+ code-moi-cua-toi
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class LoginActivity extends AppCompatActivity {
+
 
  feature/login-ui-update
 import android.widget.Toast;
@@ -42,18 +53,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
+ main
     EditText editTextUsername;
     EditText editTextPassword;
     Button buttonLogin;
     TextView textViewRegisterLink;
     DatabaseHelper db;
+ code-moi-cua-toi
+
 main
+ main
  main
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+ code-moi-cua-toi
 
  feature/login-ui-update
         setContentView(R.layout.activity_login);
@@ -118,6 +134,7 @@ code-SoDo
 
     
 
+ main
         setContentView(R.layout.activity_login);
 
         db = new DatabaseHelper(this);
@@ -127,6 +144,10 @@ code-SoDo
         buttonLogin = findViewById(R.id.buttonLogin);
         textViewRegisterLink = findViewById(R.id.textViewRegisterLink); // ID này phải có trong file activity_login.xml
 
+ code-moi-cua-toi
+
+ main
+ main
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,9 +155,12 @@ code-SoDo
                 String username = editTextUsername.getText().toString();
                 String password = editTextPassword.getText().toString();
 
+ code-moi-cua-toi
+
  feature/login-ui-update
                 if (username.equals("admin") && password.equals("123")) {
 
+ main
                 if (username.isEmpty() || password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
                     return;
@@ -147,6 +171,10 @@ code-SoDo
                 if (isAuthenticated) {
                     Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
 
+ code-moi-cua-toi
+
+ main
+ main
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();
@@ -155,10 +183,13 @@ code-SoDo
                 }
             }
         });
+ code-moi-cua-toi
+
  feature/login-ui-update
     }
 }
 
+ main
         textViewRegisterLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -168,6 +199,10 @@ code-SoDo
             }
         });
     }
+ code-moi-cua-toi
 }
+
+}
+
 
 

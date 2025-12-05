@@ -5,6 +5,10 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+ code-moi-cua-toi
+
+    <!-- Permissions: Phải nằm NGOÀI thẻ application -->
+main
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -41,6 +45,14 @@
             </intent-filter>
         </activity>
 
+ code-moi-cua-toi
+        <activity android:name=".MainActivity" android:exported="false" />
+        <activity android:name=".AppDataActivity" android:exported="false" />
+        <activity android:name=".editTask" android:exported="false" />
+        <activity android:name=".CreateNewTaskActivity" android:exported="false" />
+        <activity android:name=".StatisticsActivity" android:exported="false" />
+        <activity android:name=".RegisterActivity" android:exported="false" />
+
         <!-- Các Activity khác -->
         <activity
             android:name=".MainActivity"
@@ -57,14 +69,10 @@
         <activity
             android:name=".editTask"
             android:exported="false" />
+ main
 
-        <activity
-            android:name=".CreateNewTaskActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".StatisticsActivity"
-            android:exported="false" />
+        <!-- ⭐ HAI DÒNG QUAN TRỌNG CẦN THÊM ⭐ -->
+        <activity android:name=".AddRecurringActivity" android:exported="false" />
 
         <activity
             android:name=".SpendingChartActivity"
