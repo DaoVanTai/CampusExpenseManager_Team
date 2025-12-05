@@ -20,11 +20,12 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="#FF9800" />
 
+    <!-- Hàng nút chức năng trên cùng -->
     <Button
         android:id="@+id/btnCreate"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="88dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="4dp"
         android:text="Thêm mới"
         android:textSize="12sp"
@@ -56,6 +57,7 @@
         app:layout_constraintStart_toEndOf="@+id/btnOpenAppData"
         app:layout_constraintTop_toTopOf="@+id/btnCreate" />
 
+    <!-- Nút xem biểu đồ -->
     <Button
         android:id="@+id/btnViewChart"
         android:layout_width="380dp"
@@ -70,6 +72,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnOpenAppData" />
 
+    <!-- Nút thêm bằng giọng nói (Fix lỗi conflict ở đây) -->
+    <Button
+        android:id="@+id/button_voice_expense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="🎙️ Thêm Chi Tiêu Bằng Giọng Nói"
+        android:padding="12dp"
+        android:backgroundTint="#007BFF"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnViewChart" />
+
+    <!-- Danh sách công việc (ListView) -->
+    <!-- Đã chỉnh constraint nằm dưới nút Voice và trên nút Back -->
     <ListView
         android:id="@+id/lvTasks"
         android:layout_width="0dp"
@@ -79,8 +98,9 @@
         app:layout_constraintBottom_toTopOf="@+id/btnOpenLoginActivity"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnViewChart" />
+        app:layout_constraintTop_toBottomOf="@+id/button_voice_expense" />
 
+    <!-- Nút Back (Quay lại đăng nhập) -->
     <Button
         android:id="@+id/btnOpenLoginActivity"
         android:layout_width="wrap_content"

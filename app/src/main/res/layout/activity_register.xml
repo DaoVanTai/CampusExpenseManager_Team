@@ -6,6 +6,13 @@
     android:padding="24dp"
     android:gravity="center"
     android:background="#F0F4C3">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:fillViewport="true"
+    tools:context=".RegisterActivity">
 
     <TextView
         android:layout_width="wrap_content"
@@ -14,6 +21,18 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="30dp"/>
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register Account"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="30dp"
+            android:layout_marginTop="40dp"/>
 
     <EditText
         android:id="@+id/etRegUser"
@@ -62,3 +81,15 @@
         android:layout_marginTop="8dp"/>
 
 </LinearLayout>
+        <Button
+            android:id="@+id/btnBackLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Back to Login"
+            android:layout_marginTop="12dp"
+            android:background="@android:color/transparent"
+            android:textColor="@color/design_default_color_primary"
+            android:textSize="14sp"/>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="30dp"
     android:gravity="center"
     android:background="#E0F7FA">
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#FFFFFF"
+    tools:context=".LoginActivity">
 
+    <!-- Tiêu đề -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -15,7 +21,13 @@
         android:textStyle="bold"
         android:textColor="#006064"
         android:layout_marginBottom="40dp"/>
+        android:layout_marginBottom="32dp"
+        android:text="Đăng Nhập"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="#000000"/>
 
+    <!-- Ô nhập Tên đăng nhập -->
     <EditText
         android:id="@+id/etUser"
         android:layout_width="match_parent"
@@ -24,7 +36,16 @@
         android:background="@android:drawable/edit_text"
         android:padding="12dp"
         android:layout_marginBottom="20dp"/>
+        android:id="@+id/editTextUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:hint="Tên đăng nhập"
+        android:inputType="text"
+        android:background="@android:drawable/edit_text" />
 
+    <!-- Ô nhập Mật khẩu -->
     <EditText
         android:id="@+id/etPass"
         android:layout_width="match_parent"
@@ -34,7 +55,16 @@
         android:background="@android:drawable/edit_text"
         android:padding="12dp"
         android:layout_marginBottom="30dp"/>
+        android:id="@+id/editTextPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:padding="12dp"
+        android:hint="Mật khẩu"
+        android:inputType="textPassword"
+        android:background="@android:drawable/edit_text" />
 
+    <!-- Nút Đăng nhập -->
     <Button
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
@@ -52,5 +82,23 @@
         android:textStyle="italic"
         android:padding="10dp"
         android:layout_marginTop="20dp"/>
+
+        android:id="@+id/buttonLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Đăng nhập"
+        android:textSize="18sp"
+        android:padding="12dp" />
+
+    <!-- Link chuyển sang đăng ký -->
+    <TextView
+        android:id="@+id/textViewRegisterLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chưa có tài khoản? Đăng ký ngay"
+        android:layout_marginTop="16dp"
+        android:textSize="16sp"
+        android:textColor="#6200EE"
+        android:textStyle="italic"/>
 
 </LinearLayout>
