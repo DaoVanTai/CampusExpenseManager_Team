@@ -29,7 +29,7 @@
         android:text="Thêm mới"
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@+id/btnOpenAppData"
-        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,10 +39,22 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:layout_marginEnd="4dp"
-        android:text="Quản lý"
+        android:text="QL Dữ liệu"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@+id/btnRecurring"
+        app:layout_constraintStart_toEndOf="@+id/btnCreate"
+        app:layout_constraintTop_toTopOf="@+id/btnCreate" />
+
+    <Button
+        android:id="@+id/btnRecurring"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:text="Định kỳ"
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@+id/btnStatistics"
-        app:layout_constraintStart_toEndOf="@+id/btnCreate"
+        app:layout_constraintStart_toEndOf="@+id/btnOpenAppData"
         app:layout_constraintTop_toTopOf="@+id/btnCreate" />
 
     <Button
@@ -53,12 +65,12 @@
         android:text="Thống Kê"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/btnOpenAppData"
+        app:layout_constraintStart_toEndOf="@+id/btnRecurring"
         app:layout_constraintTop_toTopOf="@+id/btnCreate" />
 
     <Button
         android:id="@+id/btnViewChart"
-        android:layout_width="380dp"
+        android:layout_width="0dp"
         android:layout_height="64dp"
         android:layout_marginTop="12dp"
         android:backgroundTint="#FF9800"
@@ -66,9 +78,8 @@
         android:textColor="#FFFFFF"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnOpenAppData" />
+        app:layout_constraintTop_toBottomOf="@+id/btnCreate" />
 
     <ListView
         android:id="@+id/lvTasks"

@@ -53,7 +53,7 @@
                 android:text="0"
                 android:textSize="40sp"
                 android:textStyle="bold"
-                android:textColor="@color/purple_500" />
+                android:textColor="@android:color/holo_purple" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -89,10 +89,32 @@
                 android:text="0 VNĐ"
                 android:textSize="40sp"
                 android:textStyle="bold"
-                android:textColor="@color/purple_700" />
+                android:textColor="@android:color/holo_blue_dark" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
+    <TextView
+        android:id="@+id/tvCategoryBreakdownTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Phân tích chi tiêu theo Danh mục:"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardTotalAmount" />
+
+    <ListView
+        android:id="@+id/lvCategoryStats"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:dividerHeight="1dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvCategoryBreakdownTitle" />
     <Button
         android:id="@+id/btnBack"
         android:layout_width="0dp"

@@ -60,6 +60,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edtTaskQuantity" />
 
+    <TextView
+        android:id="@+id/tvCategoryLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Danh mục:"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edtTaskPrice" />
+
+    <Spinner
+        android:id="@+id/spinnerCategory"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:minHeight="48dp"
+        app:layout_constraintBottom_toBottomOf="@+id/tvCategoryLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvCategoryLabel"
+        app:layout_constraintTop_toTopOf="@+id/tvCategoryLabel" />
     <Button
         android:id="@+id/btnSubmitCreate"
         android:layout_width="0dp"

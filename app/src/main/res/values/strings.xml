@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Baitap1</string>
+    <string-array name="expense_categories">
+        <item>Thực phẩm</item>
+        <item>Di chuyển</item>
+        <item>Giải trí</item>
+        <item>Học tập</item>
+        <item>Thuê nhà</item>
+        <item>Khác</item>
+    </string-array>
 </resources>

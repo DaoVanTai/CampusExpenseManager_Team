@@ -1,6 +1,5 @@
 package com.example.baitap1;
 
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -8,13 +7,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,12 +30,13 @@ public class MainActivity extends AppCompatActivity {
 
     private Button btnCreate;
     private Button btnOpenAppData;
+    private Button btnRecurring; // MỚI: Nút Định kỳ
     private Button btnStatistics;
     private Button btnViewChart;
     private ImageButton btnNotification;
 
     private ListView lvTasks;
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<Expense> adapter;
     private AppData appData;
 
     @SuppressLint("MissingInflatedId")
@@ -49,18 +47,23 @@ public class MainActivity extends AppCompatActivity {
 
         appData = AppData.getInstance();
 
+        // --- 1. Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App ---
+        appData.checkAndAddRecurringExpenses();
+
         // Ánh xạ View
         btnCreate = findViewById(R.id.btnCreate);
         btnOpenAppData = findViewById(R.id.btnOpenAppData);
+        btnRecurring = findViewById(R.id.btnRecurring); // MỚI: Ánh xạ nút
         btnStatistics = findViewById(R.id.btnStatistics);
         btnViewChart = findViewById(R.id.btnViewChart);
         btnNotification = findViewById(R.id.btnNotification);
         lvTasks = findViewById(R.id.lvTasks);
 
+        // Adapter
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, appData.taskList);
         lvTasks.setAdapter(adapter);
 
-        // --- CÁC SỰ KIỆN CHUYỂN TRANG (Code cũ) ---
+        // --- Sự kiện Click ---
         btnCreate.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CreateNewTaskActivity.class);
             startActivity(intent);
@@ -68,6 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
         btnOpenAppData.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AppDataActivity.class);
+            startActivity(intent);
+        });
+
+        // MỚI: Sự kiện mở màn hình RecurringExpenseActivity
+        btnRecurring.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RecurringExpenseActivity.class);
             startActivity(intent);
         });
 
@@ -81,13 +90,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Click thường: Mở trang thông báo
         btnNotification.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
             startActivity(intent);
         });
 
-        // --- MỚI: SỰ KIỆN NHẤN GIỮ (LONG CLICK) ĐỂ CÀI ĐẶT HẠN MỨC ---
         btnNotification.setOnLongClickListener(v -> {
             showSetLimitDialog();
             return true;
@@ -95,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
         lvTasks.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(MainActivity.this, editTask.class);
-            intent.putExtra("TASK_CONTENT", appData.taskList.get(position));
+            intent.putExtra("TASK_CONTENT", appData.taskList.get(position).toString());
             intent.putExtra("TASK_POSITION", position);
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
@@ -104,12 +111,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // MỚI: Kiểm tra lại chi tiêu định kỳ khi quay lại màn hình này
+        // (đề phòng trường hợp vừa thêm quy tắc mới xong quay lại)
+        appData.checkAndAddRecurringExpenses();
+
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }
 
-        // --- MỚI: TỰ ĐỘNG KIỂM TRA HẠN MỨC KHI QUAY LẠI MÀN HÌNH NÀY ---
-        // (Ví dụ: Vừa thêm mới chi tiêu xong, quay lại đây thì check ngay)
         long totalSpending = calculateTotalSpending();
         checkSpendingLimit(totalSpending);
     }
@@ -122,113 +132,99 @@ public class MainActivity extends AppCompatActivity {
             int position = data.getIntExtra("TASK_POSITION", -1);
             String updatedContent = data.getStringExtra("UPDATED_TASK_CONTENT");
             if (position != -1 && updatedContent != null) {
-                appData.taskList.set(position, updatedContent);
-                adapter.notifyDataSetChanged();
+                Expense newExpense = parseExpenseFromString(updatedContent);
+                if (newExpense != null) {
+                    appData.taskList.set(position, newExpense);
+                    adapter.notifyDataSetChanged();
+                } else {
+                    Toast.makeText(this, "Lỗi cập nhật chi tiêu!", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
 
+    private long calculateTotalSpending() {
+        long total = 0;
+        for (Expense expense : appData.taskList) {
+            total += (long) expense.getQuantity() * expense.getAmount();
+        }
+        return total;
+    }
 
-    // 1. Hiển thị hộp thoại nhập số tiền giới hạn
+    private Expense parseExpenseFromString(String expenseString) {
+        try {
+            String description = expenseString.split(" - SL: ")[0].replace("Tên: ", "").trim();
+            String quantityStr = expenseString.split(" - SL: ")[1].split(" - Giá:")[0].trim();
+            String priceStr = expenseString.split(" - Giá: ")[1].split(" - DM: ")[0].trim();
+            String category = expenseString.split(" - DM: ")[1].trim();
+
+            int quantity = Integer.parseInt(quantityStr);
+            long price = Long.parseLong(priceStr);
+
+            return new Expense(description, quantity, price, category);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private void showSetLimitDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Cài đặt hạn mức chi tiêu/ngày");
-
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         input.setHint("Nhập số tiền (VD: 500000)");
         builder.setView(input);
-
         builder.setPositiveButton("Lưu", (dialog, which) -> {
             String text = input.getText().toString();
             if (!text.isEmpty()) {
                 long limit = Long.parseLong(text);
-                // Validate: Giới hạn từ 100k đến 1 triệu
-                if (limit < 100000 || limit > 1000000) {
-                    Toast.makeText(MainActivity.this, "Vui lòng nhập từ 100k - 1 triệu!", Toast.LENGTH_SHORT).show();
-                } else {
-                    saveLimit(limit);
-                    Toast.makeText(MainActivity.this, "Đã đặt hạn mức: " + limit, Toast.LENGTH_SHORT).show();
-                    // Check lại ngay lập tức sau khi lưu
-                    checkSpendingLimit(calculateTotalSpending());
-                }
+                saveLimit(limit);
+                Toast.makeText(MainActivity.this, "Đã đặt hạn mức: " + limit, Toast.LENGTH_SHORT).show();
+                checkSpendingLimit(calculateTotalSpending());
             }
         });
         builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
         builder.show();
     }
 
-    // 2. Lưu hạn mức vào bộ nhớ máy (SharedPreferences)
     private void saveLimit(long limit) {
         SharedPreferences prefs = getSharedPreferences("ExpensePrefs", MODE_PRIVATE);
         prefs.edit().putLong("DAILY_LIMIT", limit).apply();
     }
 
-    // 3. Lấy hạn mức ra
     private long getLimit() {
         SharedPreferences prefs = getSharedPreferences("ExpensePrefs", MODE_PRIVATE);
         return prefs.getLong("DAILY_LIMIT", 0);
     }
 
-    // 4. Tính tổng tiền đang có trong danh sách (Giả lập)
-    // Vì danh sách của bạn là String, mình sẽ tìm các con số trong chuỗi để cộng lại
-    private long calculateTotalSpending() {
-        long total = 0;
-        // Duyệt qua từng dòng trong ListView
-        for (String task : appData.taskList) {
-            // Dùng Regex để tìm số trong chuỗi (Ví dụ: "Ăn trưa 30000" -> lấy được 30000)
-            Pattern p = Pattern.compile("\\d+");
-            Matcher m = p.matcher(task);
-            while (m.find()) {
-                try {
-                    // Lấy con số tìm được cộng vào tổng
-                    total += Long.parseLong(m.group());
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return total;
-    }
-
-    // 5. Kiểm tra và bắn thông báo
     private void checkSpendingLimit(long currentDailyTotal) {
         long limit = getLimit();
-        if (limit == 0) return; // Chưa cài đặt thì thôi
-
-        long warningThreshold = (long) (limit * 0.9); // 90% là cảnh báo
-
+        if (limit == 0) return;
+        long warningThreshold = (long) (limit * 0.9);
         if (currentDailyTotal >= limit) {
-            // Vượt quá -> Cảnh báo ĐỎ
-            sendNotification("CẢNH BÁO CHI TIÊU!", "Bạn đã đạt đến hạn mức ("+limit+"). Vui lòng ngừng chi tiêu!");
+            sendNotification("CẢNH BÁO CHI TIÊU!", "Đã vượt hạn mức ("+limit+")!");
         } else if (currentDailyTotal >= warningThreshold) {
-            // Sắp đến -> Cảnh báo VÀNG
-            sendNotification("Nhắc nhở", "Bạn sắp hết hạn mức hôm nay (" + currentDailyTotal + "/" + limit + ")");
+            sendNotification("Nhắc nhở", "Sắp hết hạn mức (" + currentDailyTotal + "/" + limit + ")");
         }
     }
 
-    // 6. Hàm tạo thông báo hệ thống
     private void sendNotification(String title, String message) {
         String channelId = "expense_limit_channel";
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId, "Hạn mức chi tiêu", NotificationManager.IMPORTANCE_HIGH);
+            NotificationChannel channel = new NotificationChannel(channelId, "Hạn mức chi tiêu", NotificationManager.IMPORTANCE_HIGH);
             notificationManager.createNotificationChannel(channel);
         }
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert) // Dùng icon mặc định hoặc thay bằng R.drawable.ic_notification
+                .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
-
         Intent intent = new Intent(this, NotificationActivity.class);
         intent.putExtra("NOTI_MESSAGE", message);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
         builder.setContentIntent(pendingIntent);
         notificationManager.notify(1, builder.build());
     }
