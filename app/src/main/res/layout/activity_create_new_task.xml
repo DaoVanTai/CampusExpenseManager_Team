@@ -12,7 +12,7 @@
         android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="52dp"
+        android:layout_marginTop="32dp"
         android:text="Nhập Món Cần Mua"
         android:textSize="28sp"
         android:textStyle="bold"
@@ -80,6 +80,34 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/tvCategoryLabel"
         app:layout_constraintTop_toTopOf="@+id/tvCategoryLabel" />
+
+    <!-- THÊM MỚI: Nút Chụp Biên Lai (YC 9) -->
+    <Button
+        android:id="@+id/btn_capture_receipt"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:drawableStart="@android:drawable/ic_menu_camera"
+        android:drawablePadding="8dp"
+        android:text="Chụp Biên Lai"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinnerCategory" />
+
+    <!-- THÊM MỚI: Xem trước Ảnh Biên Lai (YC 9) -->
+    <ImageView
+        android:id="@+id/iv_receipt_preview"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="16dp"
+        android:background="#EEEEEE"
+        android:scaleType="centerCrop"
+        android:contentDescription="Xem trước biên lai đã chụp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_capture_receipt"
+        tools:src="@tools:sample/avatars" />
+
     <Button
         android:id="@+id/btnSubmitCreate"
         android:layout_width="0dp"
