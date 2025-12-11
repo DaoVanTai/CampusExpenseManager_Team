@@ -12,10 +12,10 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // THÔNG SỐ CƠ SỞ DỮ LIỆU
-    public static final int DATABASE_VERSION = 4; // Tăng version để chứa ReceiptPath
+    public static final int DATABASE_VERSION = 4;
     public static final String DATABASE_NAME = "UserManager.db";
 
-    // BẢNG 1: USERS (Giữ lại định nghĩa cột)
+    // BẢNG 1: USERS
     public static final String TABLE_USERS = "users";
     public static final String COL_USER_ID = "ID";
     public static final String COL_USERNAME = "USERNAME";
@@ -30,7 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String EXP_COL_UNIT_PRICE = "UNIT_PRICE";
     public static final String EXP_COL_CATEGORY = "CATEGORY";
     public static final String EXP_COL_DATE = "DATE";
-    public static final String EXP_COL_RECEIPT_PATH = "RECEIPT_PATH"; // ⭐ CỘT MỚI: ĐƯỜNG DẪN BIÊN LAI ⭐
+    public static final String EXP_COL_RECEIPT_PATH = "RECEIPT_PATH";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -45,7 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COL_PASSWORD + " TEXT" + ")";
         db.execSQL(CREATE_USERS_TABLE);
 
-        // TẠO BẢNG EXPENSES VỚI CẤU TRÚC CUỐI CÙNG
+        // TẠO BẢNG EXPENSES
         String CREATE_EXPENSES_TABLE = "CREATE TABLE " + TABLE_EXPENSES + " ("
                 + EXP_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + EXP_COL_USER_ID + " INTEGER, "
@@ -64,7 +64,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < newVersion) {
-            // Theo logic cũ của bạn (Xóa tất cả):
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSES);
             onCreate(db);
@@ -72,8 +71,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.w("DatabaseHelper", "Nâng cấp cơ sở dữ liệu. ĐÃ XÓA TẤT CẢ DỮ LIỆU.");
     }
 
-    // --- PHƯƠNG THỨC XỬ LÝ EXPENSE ---
-
+    // --- CÁC PHƯƠNG THỨC XỬ LÝ EXPENSE ---
 
     public boolean addExpense(long userId, String description, int quantity, long unitPrice, String category, String date, String receiptPath) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -92,7 +90,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
-
     public List<Expense> getAllExpenses() {
         List<Expense> expenseList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -101,7 +98,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                // Lấy tất cả 6 giá trị cần thiết từ DB
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_ID));
                 String desc = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_DESCRIPTION));
                 int qty = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_QUANTITY));
@@ -109,7 +105,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String cat = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_CATEGORY));
                 String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH));
 
-                // ⭐ SỬ DỤNG CONSTRUCTOR 6 THAM SỐ (ID, DESC, QTY, PRICE, CAT, PATH) ⭐
                 Expense expense = new Expense(id, desc, qty, price, cat, path);
                 expenseList.add(expense);
             } while (cursor.moveToNext());
@@ -119,13 +114,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return expenseList;
     }
 
-
     public Expense getExpenseById(int expenseId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Expense expense = null;
 
         Cursor cursor = db.query(TABLE_EXPENSES,
-                null, // Lấy tất cả các cột
+                null,
                 EXP_COL_ID + " = ?",
                 new String[]{String.valueOf(expenseId)},
                 null, null, null);
@@ -138,7 +132,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String cat = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_CATEGORY));
             String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH));
 
-            // Tạo đối tượng Expense
             expense = new Expense(id, desc, qty, price, cat, path);
         }
 
@@ -147,8 +140,55 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return expense;
     }
 
+    public boolean updateExpense(int id, String description, int quantity, long unitPrice, String category, String receiptPath) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
 
-    // --- PHƯƠNG THỨC XỬ LÝ USER (Giữ nguyên) ---
+        contentValues.put(EXP_COL_DESCRIPTION, description);
+        contentValues.put(EXP_COL_QUANTITY, quantity);
+        contentValues.put(EXP_COL_UNIT_PRICE, unitPrice);
+        contentValues.put(EXP_COL_CATEGORY, category);
+        contentValues.put(EXP_COL_RECEIPT_PATH, receiptPath);
+
+        int result = db.update(TABLE_EXPENSES, contentValues, EXP_COL_ID + " = ?", new String[]{String.valueOf(id)});
+        db.close();
+        return result > 0;
+    }
+
+    // ⭐ PHƯƠNG THỨC MỚI: TÌM KIẾM CHI TIÊU ⭐
+    public List<Expense> searchExpenses(String keyword) {
+        List<Expense> resultList = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Tìm kiếm trong Tên hoặc Danh mục, sắp xếp theo ngày giảm dần
+        String query = "SELECT * FROM " + TABLE_EXPENSES +
+                " WHERE " + EXP_COL_DESCRIPTION + " LIKE ? OR " +
+                EXP_COL_CATEGORY + " LIKE ? " +
+                " ORDER BY " + EXP_COL_DATE + " DESC";
+
+        String searchPattern = "%" + keyword + "%";
+
+        Cursor cursor = db.rawQuery(query, new String[]{searchPattern, searchPattern});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int id = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_ID));
+                String desc = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_DESCRIPTION));
+                int qty = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_QUANTITY));
+                long price = cursor.getLong(cursor.getColumnIndexOrThrow(EXP_COL_UNIT_PRICE));
+                String cat = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_CATEGORY));
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH));
+
+                Expense expense = new Expense(id, desc, qty, price, cat, path);
+                resultList.add(expense);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return resultList;
+    }
+
+    // --- CÁC PHƯƠNG THỨC XỬ LÝ USER (Giữ nguyên) ---
 
     public boolean addUser(String username, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -171,7 +211,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public long getUserId(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         long userId = -1;
-
         Cursor cursor = db.rawQuery("SELECT " + COL_USER_ID + " FROM " + TABLE_USERS + " WHERE " + COL_USERNAME + " = ?", new String[]{username});
 
         if (cursor.moveToFirst()) {

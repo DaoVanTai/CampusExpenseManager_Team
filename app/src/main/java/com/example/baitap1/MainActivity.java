@@ -22,12 +22,11 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+// ⭐ IMPORT MỚI CHO TÌM KIẾM ⭐
+import androidx.appcompat.widget.SearchView;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
 
     private static final int ADD_TASK_REQUEST = 1000;
 
@@ -37,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private Button btnStatistics;
     private Button btnViewChart;
     private ImageButton btnNotification;
+
+    // ⭐ BIẾN MỚI CHO TÌM KIẾM ⭐
+    private SearchView searchView;
 
     private ListView lvTasks;
     private ArrayAdapter<Expense> adapter;
@@ -48,13 +50,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         appData = AppData.getInstance(getApplicationContext());
 
-        // --- 1. Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App ---
+        // Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App
         appData.checkAndAddRecurringExpenses();
 
-        // Ánh xạ View
+        // --- ÁNH XẠ VIEW ---
         btnCreate = findViewById(R.id.btnCreate);
         btnOpenAppData = findViewById(R.id.btnOpenAppData);
         btnRecurring = findViewById(R.id.btnRecurring);
@@ -63,14 +64,16 @@ public class MainActivity extends AppCompatActivity {
         btnNotification = findViewById(R.id.btnNotification);
         lvTasks = findViewById(R.id.lvTasks);
 
+        // ⭐ ÁNH XẠ THANH TÌM KIẾM ⭐
+        searchView = findViewById(R.id.searchView);
+
         // Adapter
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, appData.taskList);
         lvTasks.setAdapter(adapter);
 
-        // --- Sự kiện Click ---
+        // --- SỰ KIỆN CLICK CÁC NÚT CHỨC NĂNG ---
         btnCreate.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CreateNewTaskActivity.class);
-            // ⭐ ĐÃ SỬA: Dùng startActivityForResult để chờ tín hiệu làm mới ⭐
             startActivityForResult(intent, ADD_TASK_REQUEST);
         });
 
@@ -104,31 +107,42 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // ⭐ BỔ SUNG LOGIC: TRUYỀN ID CHI TIÊU THAY VÌ CHUỖI CONTENT ⭐
+        // Xử lý click vào item để sửa
         lvTasks.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(MainActivity.this, editTask.class);
-
-            // Lấy đối tượng Expense từ danh sách
             Expense selectedExpense = appData.taskList.get(position);
 
-            // ⭐ TRUYỀN ID CỦA CHI TIÊU VÀO INTENT ⭐
+            // Truyền ID sang màn hình sửa
             intent.putExtra("EXPENSE_ID", selectedExpense.getId());
-
-            // Giữ lại vị trí nếu editTask.java vẫn cần nó
             intent.putExtra("TASK_POSITION", position);
 
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
-        // -------------------------------------------------------------
+
+        // ⭐ SỰ KIỆN TÌM KIẾM ⭐
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query); // Tìm khi bấm Enter
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                performSearch(newText); // Tìm ngay khi gõ
+                return false;
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // ⭐ BƯỚC QUAN TRỌNG: LUÔN TẢI DỮ LIỆU MỚI NHẤT TỪ DB VÀO taskList ⭐
+        // Load lại dữ liệu mỗi khi quay lại màn hình chính
+        // LƯU Ý: Nếu đang tìm kiếm dở thì không nên load lại tất cả,
+        // nhưng để đơn giản ta cứ load lại mới nhất, người dùng có thể gõ lại.
         appData.loadTasksFromDatabase();
-
         appData.checkAndAddRecurringExpenses();
 
         if (adapter != null) {
@@ -139,34 +153,43 @@ public class MainActivity extends AppCompatActivity {
         checkSpendingLimit(totalSpending);
     }
 
-    // ⭐ PHƯƠNG THỨC ĐÃ SỬA: Xử lý kết quả trả về từ Activity khác ⭐
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // 1. Xử lý logic cập nhật sau khi chỉnh sửa
+        // Xử lý cập nhật sau khi sửa
         if (requestCode == AppData.REQUEST_EDIT_TASK && resultCode == Activity.RESULT_OK && data != null) {
-            int position = data.getIntExtra("TASK_POSITION", -1);
-            String updatedContent = data.getStringExtra("UPDATED_TASK_CONTENT");
-            if (position != -1 && updatedContent != null) {
-                Expense newExpense = parseExpenseFromString(updatedContent);
-                if (newExpense != null) {
-                    appData.taskList.set(position, newExpense);
-                    // onResume sẽ gọi notifyDataSetChanged() sau đó
-                } else {
-                    Toast.makeText(this, "Lỗi cập nhật chi tiêu!", Toast.LENGTH_SHORT).show();
-                }
-            }
+            // onResume sẽ tự động load lại dữ liệu mới từ DB nên không cần set thủ công
         }
 
-        // 2. Xử lý logic sau khi THÊM MỚI (Từ CreateNewTaskActivity)
+        // Xử lý sau khi thêm mới
         if (requestCode == ADD_TASK_REQUEST && resultCode == Activity.RESULT_OK) {
-            // Chỉ cần báo hiệu vì onResume() sẽ chạy ngay sau hàm này và gọi loadTasksFromDatabase()
             Toast.makeText(this, "Chi tiêu mới đã được thêm thành công!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // --- CÁC PHƯƠNG THỨC KHÁC GIỮ NGUYÊN ---
+    // ⭐ HÀM THỰC HIỆN TÌM KIẾM ⭐
+    private void performSearch(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            // Nếu từ khóa rỗng, tải lại toàn bộ danh sách
+            appData.loadTasksFromDatabase();
+        } else {
+            // Nếu có từ khóa, gọi DatabaseHelper để tìm
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            List<Expense> results = dbHelper.searchExpenses(keyword.trim());
+
+            // Cập nhật danh sách hiển thị
+            appData.taskList.clear();
+            appData.taskList.addAll(results);
+        }
+
+        // Cập nhật giao diện ListView
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    // --- CÁC HÀM HỖ TRỢ KHÁC (Giữ nguyên) ---
 
     private long calculateTotalSpending() {
         long total = 0;
@@ -174,25 +197,6 @@ public class MainActivity extends AppCompatActivity {
             total += (long) expense.getQuantity() * expense.getAmount();
         }
         return total;
-    }
-
-    private Expense parseExpenseFromString(String expenseString) {
-        // LƯU Ý: Nếu Expense Model có thay đổi (thêm ID, Path), logic này cần cập nhật.
-        try {
-            String description = expenseString.split(" - SL: ")[0].replace("Tên: ", "").trim();
-            String quantityStr = expenseString.split(" - SL: ")[1].split(" - Giá:")[0].trim();
-            String priceStr = expenseString.split(" - Giá: ")[1].split(" - DM: ")[0].trim();
-            String category = expenseString.split(" - DM: ")[1].trim();
-
-            int quantity = Integer.parseInt(quantityStr);
-            long price = Long.parseLong(priceStr);
-
-            // Trả về constructor 4 tham số (giữ nguyên logic cũ)
-            return new Expense(description, quantity, price, category);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private void showSetLimitDialog() {

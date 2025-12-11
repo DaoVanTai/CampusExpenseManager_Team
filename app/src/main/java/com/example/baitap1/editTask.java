@@ -29,11 +29,11 @@ public class editTask extends AppCompatActivity {
     private Spinner spinnerEditCategory;
     private Button btnSubmitEdit;
 
-    // ⭐ UI elements mới cho Biên Lai ⭐
+    // UI elements cho Biên Lai
     private ImageView ivReceiptImage;
     private TextView tvReceiptLabel;
 
-    // Biến quan trọng mới
+    // Biến quan trọng
     private int currentExpenseId = -1;
     private int taskPosition = -1;
     private String currentReceiptPath = null;
@@ -52,7 +52,7 @@ public class editTask extends AppCompatActivity {
         edtEditTaskPrice = findViewById(R.id.edtEditTaskPrice);
         spinnerEditCategory = findViewById(R.id.spinnerEditCategory);
 
-        // ⭐ Ánh xạ UI mới cho Biên Lai ⭐
+        // Ánh xạ UI cho Biên Lai
         ivReceiptImage = findViewById(R.id.ivReceiptImage);
         tvReceiptLabel = findViewById(R.id.tvReceiptLabel);
 
@@ -63,12 +63,12 @@ public class editTask extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerEditCategory.setAdapter(adapter);
 
-        // 1. Lấy ID và Tải dữ liệu
+        // 1. Lấy ID và Tải dữ liệu từ Intent
         currentExpenseId = getIntent().getIntExtra("EXPENSE_ID", -1);
         taskPosition = getIntent().getIntExtra("TASK_POSITION", -1);
 
         if (currentExpenseId != -1) {
-            loadExpenseDetails(currentExpenseId); // ⭐ TẢI DỮ LIỆU TỪ DB ⭐
+            loadExpenseDetails(currentExpenseId); // Tải dữ liệu từ DB lên giao diện
         } else {
             Toast.makeText(this, "Lỗi: Không tìm thấy ID chi tiêu.", Toast.LENGTH_SHORT).show();
             finish();
@@ -77,32 +77,31 @@ public class editTask extends AppCompatActivity {
         // 2. Xử lý nút Lưu/Submit
         btnSubmitEdit.setOnClickListener(v -> saveEditedTask());
 
-        // Đặt mặc định ẩn
+        // Đặt mặc định ẩn ảnh biên lai lúc đầu
         ivReceiptImage.setVisibility(View.GONE);
         if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.GONE);
     }
 
-    // ⭐ PHƯƠNG THỨC TẢI CHI TIẾT TỪ DATABASE ⭐
+    // --- PHƯƠNG THỨC TẢI CHI TIẾT TỪ DATABASE ---
     private void loadExpenseDetails(int id) {
         Expense expense = dbHelper.getExpenseById(id);
 
         if (expense != null) {
-            // Hiển thị các trường cũ
+            // Hiển thị các trường dữ liệu cũ
             edtEditTaskContent.setText(expense.getDescription());
             edtEditTaskQuantity.setText(String.valueOf(expense.getQuantity()));
             edtEditTaskPrice.setText(String.valueOf(expense.getAmount()));
 
-            // Đặt giá trị Spinner
+            // Đặt giá trị Spinner đúng với dữ liệu cũ
             setSpinnerToValue(spinnerEditCategory, expense.getCategory());
 
-            // Lưu đường dẫn ảnh hiện tại
+            // Lưu đường dẫn ảnh hiện tại vào biến tạm
             currentReceiptPath = expense.getReceiptPath();
 
-            // ⭐ SỬA LỖI Ở ĐÂY: Trì hoãn việc gọi hàm hiển thị ảnh cho đến khi View có kích thước ⭐
+            // Hiển thị ảnh (nếu có)
             if (ivReceiptImage != null) {
                 ivReceiptImage.post(() -> displayReceipt(currentReceiptPath));
             }
-
 
         } else {
             Toast.makeText(this, "Lỗi: Không tìm thấy chi tiêu với ID này.", Toast.LENGTH_SHORT).show();
@@ -110,22 +109,17 @@ public class editTask extends AppCompatActivity {
         }
     }
 
-
     private void displayReceipt(String photoPath) {
         if (photoPath != null && !photoPath.isEmpty()) {
-            // Hiển thị label/preview
             if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.VISIBLE);
             ivReceiptImage.setVisibility(View.VISIBLE);
 
             try {
-                // Logic giảm kích thước ảnh Bitmap
                 int targetW = ivReceiptImage.getWidth();
                 int targetH = ivReceiptImage.getHeight();
 
-                // LƯU Ý: Nếu targetW/H vẫn là 0 (ví dụ ViewTreeObserver không hoạt động),
-                // ta sẽ dùng kích thước cố định để tránh lỗi chia cho 0.
                 if (targetW <= 0) targetW = 300;
-                if (targetH <= 0) targetH = 150; // Kích thước đặt trong XML là 150dp
+                if (targetH <= 0) targetH = 150;
 
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
@@ -147,21 +141,27 @@ public class editTask extends AppCompatActivity {
                 Toast.makeText(this, "Không thể tải ảnh (File có thể đã bị xóa).", Toast.LENGTH_SHORT).show();
             }
         } else {
-            // Ẩn nếu không có ảnh
             if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.GONE);
             ivReceiptImage.setVisibility(View.GONE);
         }
     }
 
-
+    // --- HÀM LƯU CHỈNH SỬA (Đã cập nhật logic gọi DB) ---
     private void saveEditedTask() {
         String name = edtEditTaskContent.getText().toString().trim();
         String quantityStr = edtEditTaskQuantity.getText().toString().trim();
         String priceStr = edtEditTaskPrice.getText().toString().trim();
         String category = spinnerEditCategory.getSelectedItem().toString();
 
-        if (name.isEmpty() || currentExpenseId == -1) {
-            Toast.makeText(this, "Dữ liệu không hợp lệ!", Toast.LENGTH_SHORT).show();
+        // Kiểm tra dữ liệu hợp lệ
+        if (name.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập tên chi tiêu!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (currentExpenseId == -1) {
+            Toast.makeText(this, "Lỗi: Không xác định được ID chi tiêu!", Toast.LENGTH_SHORT).show();
+            finish();
             return;
         }
 
@@ -169,21 +169,39 @@ public class editTask extends AppCompatActivity {
             int quantity = Integer.parseInt(quantityStr);
             long price = Long.parseLong(priceStr);
 
-            // ⭐ BỔ SUNG LOGIC UPDATE DATABASE BẰNG ID TẠI ĐÂY ⭐
-            // Ví dụ: boolean success = dbHelper.updateExpense(currentExpenseId, ...);
+            // ⭐ GỌI HÀM UPDATE TRONG DATABASE HELPER ⭐
+            // Ta truyền lại currentReceiptPath (ảnh cũ) vì tính năng sửa ảnh chưa có
+            boolean isUpdated = dbHelper.updateExpense(
+                    currentExpenseId,
+                    name,
+                    quantity,
+                    price,
+                    category,
+                    currentReceiptPath
+            );
 
-            // Hiện tại, chỉ báo hiệu thành công và kết thúc
-            Intent resultIntent = new Intent();
-            setResult(Activity.RESULT_OK, resultIntent);
-            Toast.makeText(this, "Đã lưu chỉnh sửa.", Toast.LENGTH_SHORT).show();
-            finish();
+            if (isUpdated) {
+                Toast.makeText(this, "Đã cập nhật thành công!", Toast.LENGTH_SHORT).show();
+
+                // Trả kết quả về MainActivity để làm mới danh sách
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("UPDATED_TASK_CONTENT",
+                        String.format("Tên: %s - SL: %d - Giá: %d - DM: %s", name, quantity, price, category));
+
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish(); // Đóng Activity
+            } else {
+                Toast.makeText(this, "Lỗi: Không thể cập nhật vào cơ sở dữ liệu.", Toast.LENGTH_SHORT).show();
+            }
 
         } catch (NumberFormatException e) {
-            Toast.makeText(this, "Số lượng hoặc giá không hợp lệ!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Số lượng hoặc giá phải là số hợp lệ!", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Đã xảy ra lỗi không mong muốn.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // Hàm tìm và chọn giá trị trong Spinner (Dùng lại)
     private void setSpinnerToValue(Spinner spinner, String value) {
         ArrayAdapter adapter = (ArrayAdapter) spinner.getAdapter();
         if (adapter != null) {
