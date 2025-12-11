@@ -110,10 +110,7 @@ public class editTask extends AppCompatActivity {
         }
     }
 
-    /**
-     * Hiển thị ảnh biên lai (giảm kích thước để tránh OOM)
-     * CHÚ Ý: Hàm này được gọi sau khi ImageView đã được vẽ (có kích thước)
-     */
+
     private void displayReceipt(String photoPath) {
         if (photoPath != null && !photoPath.isEmpty()) {
             // Hiển thị label/preview
@@ -156,9 +153,7 @@ public class editTask extends AppCompatActivity {
         }
     }
 
-    /**
-     * Logic chỉnh sửa và lưu (Cần được bổ sung đầy đủ)
-     */
+
     private void saveEditedTask() {
         String name = edtEditTaskContent.getText().toString().trim();
         String quantityStr = edtEditTaskQuantity.getText().toString().trim();

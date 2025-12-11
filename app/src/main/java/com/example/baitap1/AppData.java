@@ -21,9 +21,7 @@ public class AppData {
     public ArrayList<RecurringExpense> recurringList;
     public static final int REQUEST_EDIT_TASK = 1;
 
-    /**
-     * Constructor phải nhận Context để khởi tạo DatabaseHelper.
-     */
+
     private AppData(Context context) {
         this.context = context;
         taskList = new ArrayList<>();
@@ -39,9 +37,7 @@ public class AppData {
         recurringList.add(new RecurringExpense("Tiền nhà", 5000000, "Thuê nhà", "01/01/2025", "31/12/2025"));
     }
 
-    /**
-     * Phương thức GET INSTANCE MỚI: Cần Context để khởi tạo lần đầu.
-     */
+
     public static synchronized AppData getInstance(Context context) {
         if (instance == null) {
             // Sử dụng applicationContext để tránh memory leak
@@ -58,7 +54,7 @@ public class AppData {
         return instance;
     }
 
-    // ⭐ PHƯƠNG THỨC QUAN TRỌNG: TẢI DỮ LIỆU TỪ DB VÀO taskList ⭐
+
     public void loadTasksFromDatabase() {
         taskList.clear(); // Xóa dữ liệu cũ trong bộ nhớ
 

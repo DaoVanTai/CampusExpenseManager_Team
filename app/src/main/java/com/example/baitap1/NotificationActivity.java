@@ -80,7 +80,7 @@ public class NotificationActivity extends AppCompatActivity {
         }
     }
 
-    // --- CÁC HÀM XỬ LÝ HẠN MỨC (Copy logic từ MainActivity sang) ---
+
 
     private void showSetLimitDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

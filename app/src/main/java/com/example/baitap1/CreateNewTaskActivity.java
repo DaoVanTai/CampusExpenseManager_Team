@@ -47,7 +47,7 @@ public class CreateNewTaskActivity extends AppCompatActivity {
 
     // BIẾN QUAN TRỌNG
     private String currentPhotoPath = null;
-    // ⭐ LƯU Ý: PHẦN NÀY CẦN ĐƯỢC THAY THẾ BẰNG LOGIC LẤY USER ID THỰC SỰ ⭐
+
     private long loggedInUserId = 1L;
 
     // UI ELEMENTS
@@ -89,13 +89,7 @@ public class CreateNewTaskActivity extends AppCompatActivity {
         ivReceiptPreview.setVisibility(View.GONE);
     }
 
-    // =================================================================
-    // 1. LOGIC XỬ LÝ CAMERA VÀ QUYỀN (PERMISSION)
-    // =================================================================
 
-    /**
-     * Kiểm tra và yêu cầu quyền CAMERA (Run-time permission)
-     */
     private void checkAndRequestPermissions() {
         // Chỉ kiểm tra quyền CAMERA (vì Storage không cần cho thư mục ứng dụng từ API 29+)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -169,9 +163,7 @@ public class CreateNewTaskActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Giảm kích thước ảnh Bitmap trước khi hiển thị trong ImageView để tránh lỗi Out of Memory (OOM).
-     */
+
     private void setReducedImagePreview() {
         if (currentPhotoPath == null) return;
 

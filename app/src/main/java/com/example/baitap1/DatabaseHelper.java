@@ -74,9 +74,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     // --- PHƯƠNG THỨC XỬ LÝ EXPENSE ---
 
-    /**
-     * Thêm một mục chi tiêu mới bao gồm đường dẫn biên lai.
-     */
+
     public boolean addExpense(long userId, String description, int quantity, long unitPrice, String category, String date, String receiptPath) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -94,9 +92,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    /**
-     * Phương thức lấy tất cả chi tiêu dưới dạng List<Expense> (ĐÃ SỬA CONSTRUCTOR)
-     */
+
     public List<Expense> getAllExpenses() {
         List<Expense> expenseList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -123,9 +119,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return expenseList;
     }
 
-    /**
-     * ⭐ PHƯƠNG THỨC MỚI: Lấy một mục chi tiêu duy nhất dựa trên ID (CẦN CHO editTask) ⭐
-     */
+
     public Expense getExpenseById(int expenseId) {
         SQLiteDatabase db = this.getReadableDatabase();
         Expense expense = null;

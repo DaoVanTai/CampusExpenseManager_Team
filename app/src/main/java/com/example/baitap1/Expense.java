@@ -9,8 +9,7 @@ public class Expense {
     private String category;
     private String receiptPath; // Đường dẫn biên lai
 
-    // ⭐ 1. CONSTRUCTOR CHÍNH (6 THAM SỐ) - DÙNG KHI TẢI TỪ DB ⭐
-    // Cần ID và Path để load đầy đủ
+
     public Expense(int id, String description, int quantity, long amount, String category, String receiptPath) {
         this.id = id;
         this.description = description;
@@ -20,8 +19,7 @@ public class Expense {
         this.receiptPath = receiptPath;
     }
 
-    // ⭐ 2. CONSTRUCTOR TẠO MỚI CÓ BIÊN LAI (5 THAM SỐ + Path) ⭐
-    // ID không cần vì DB sẽ tự tạo.
+
     public Expense(String description, int quantity, long amount, String category, String receiptPath) {
         this.id = 0; // Đặt ID là 0 hoặc -1 vì DB chưa tạo
         this.description = description;

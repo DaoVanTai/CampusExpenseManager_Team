@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    // ⭐ HẰNG SỐ MỚI: Dùng để nhận kết quả từ CreateNewTaskActivity ⭐
+
     private static final int ADD_TASK_REQUEST = 1000;
 
     private Button btnCreate;
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // ⭐ ĐÃ SỬA: Lấy AppData bằng Context (BẮT BUỘC) ⭐
+
         appData = AppData.getInstance(getApplicationContext());
 
         // --- 1. Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App ---

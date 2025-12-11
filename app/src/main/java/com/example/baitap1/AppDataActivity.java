@@ -67,6 +67,5 @@ public class AppDataActivity extends AppCompatActivity {
         });
     }
 
-    // THAY ĐỔI 6: Xóa hàm showAddTaskDialog vì nó không còn phù hợp để thêm Expense Object
-    // private void showAddTaskDialog() { ... }
+
 }
