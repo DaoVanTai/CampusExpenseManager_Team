@@ -24,7 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // BẢNG 2: EXPENSES (Chi tiêu)
     public static final String TABLE_EXPENSES = "expenses";
     public static final String EXP_COL_ID = "ID";
-    public static final String EXP_COL_USER_ID = "USER_ID"; // Giữ lại để liên kết
+    public static final String EXP_COL_USER_ID = "USER_ID";
     public static final String EXP_COL_DESCRIPTION = "DESCRIPTION";
     public static final String EXP_COL_QUANTITY = "QUANTITY";
     public static final String EXP_COL_UNIT_PRICE = "UNIT_PRICE";
@@ -51,10 +51,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + EXP_COL_USER_ID + " INTEGER, "
                 + EXP_COL_DESCRIPTION + " TEXT, "
                 + EXP_COL_QUANTITY + " INTEGER, "
-                + EXP_COL_UNIT_PRICE + " INTEGER, " // Giữ là INTEGER như bạn code
+                + EXP_COL_UNIT_PRICE + " INTEGER, "
                 + EXP_COL_CATEGORY + " TEXT, "
                 + EXP_COL_DATE + " TEXT, "
-                + EXP_COL_RECEIPT_PATH + " TEXT DEFAULT NULL, " // ⭐ CỘT BIÊN LAI ⭐
+                + EXP_COL_RECEIPT_PATH + " TEXT DEFAULT NULL, "
                 + "FOREIGN KEY(" + EXP_COL_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COL_USER_ID + ")" + ")";
         db.execSQL(CREATE_EXPENSES_TABLE);
 
@@ -63,11 +63,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Tùy chỉnh: Nếu nâng cấp từ version cũ, thêm cột RECEIPT_PATH
-        if (oldVersion < 4) {
-            // Thao tác này chỉ cần thiết nếu bạn muốn giữ lại dữ liệu cũ,
-            // nhưng theo code bạn cung cấp, bạn đang DROP TABLE.
-
+        if (oldVersion < newVersion) {
             // Theo logic cũ của bạn (Xóa tất cả):
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_EXPENSES);
@@ -76,11 +72,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.w("DatabaseHelper", "Nâng cấp cơ sở dữ liệu. ĐÃ XÓA TẤT CẢ DỮ LIỆU.");
     }
 
-    // --- PHƯƠNG THỨC XỬ LÝ EXPENSE (YC Chính) ---
+    // --- PHƯƠNG THỨC XỬ LÝ EXPENSE ---
 
     /**
      * Thêm một mục chi tiêu mới bao gồm đường dẫn biên lai.
-     * @param userId: ID người dùng (Nếu không dùng, truyền 0 hoặc -1)
      */
     public boolean addExpense(long userId, String description, int quantity, long unitPrice, String category, String date, String receiptPath) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -92,14 +87,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(EXP_COL_UNIT_PRICE, unitPrice);
         contentValues.put(EXP_COL_CATEGORY, category);
         contentValues.put(EXP_COL_DATE, date);
-        contentValues.put(EXP_COL_RECEIPT_PATH, receiptPath); // ⭐ LƯU ĐƯỜNG DẪN ẢNH ⭐
+        contentValues.put(EXP_COL_RECEIPT_PATH, receiptPath);
 
         long result = db.insert(TABLE_EXPENSES, null, contentValues);
         db.close();
         return result != -1;
     }
 
-    // Phương thức lấy tất cả chi tiêu dưới dạng List<Expense>
+    /**
+     * Phương thức lấy tất cả chi tiêu dưới dạng List<Expense> (ĐÃ SỬA CONSTRUCTOR)
+     */
     public List<Expense> getAllExpenses() {
         List<Expense> expenseList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -108,18 +105,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (cursor.moveToFirst()) {
             do {
-                // Đảm bảo chỉ mục cột là chính xác
+                // Lấy tất cả 6 giá trị cần thiết từ DB
                 int id = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_ID));
                 String desc = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_DESCRIPTION));
                 int qty = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_QUANTITY));
                 long price = cursor.getLong(cursor.getColumnIndexOrThrow(EXP_COL_UNIT_PRICE));
                 String cat = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_CATEGORY));
-                String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH)); // Lấy đường dẫn
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH));
 
-                // Bỏ qua date và userId cho Expense Model đơn giản này
-
-                // Tạo đối tượng Expense (Sử dụng constructor mới)
-                Expense expense = new Expense(desc, qty, price, cat);
+                // ⭐ SỬ DỤNG CONSTRUCTOR 6 THAM SỐ (ID, DESC, QTY, PRICE, CAT, PATH) ⭐
+                Expense expense = new Expense(id, desc, qty, price, cat, path);
                 expenseList.add(expense);
             } while (cursor.moveToNext());
         }
@@ -128,8 +123,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return expenseList;
     }
 
+    /**
+     * ⭐ PHƯƠNG THỨC MỚI: Lấy một mục chi tiêu duy nhất dựa trên ID (CẦN CHO editTask) ⭐
+     */
+    public Expense getExpenseById(int expenseId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Expense expense = null;
 
-    // --- PHƯƠNG THỨC XỬ LÝ USER (Giữ nguyên cho tính toàn vẹn) ---
+        Cursor cursor = db.query(TABLE_EXPENSES,
+                null, // Lấy tất cả các cột
+                EXP_COL_ID + " = ?",
+                new String[]{String.valueOf(expenseId)},
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            int id = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_ID));
+            String desc = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_DESCRIPTION));
+            int qty = cursor.getInt(cursor.getColumnIndexOrThrow(EXP_COL_QUANTITY));
+            long price = cursor.getLong(cursor.getColumnIndexOrThrow(EXP_COL_UNIT_PRICE));
+            String cat = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_CATEGORY));
+            String path = cursor.getString(cursor.getColumnIndexOrThrow(EXP_COL_RECEIPT_PATH));
+
+            // Tạo đối tượng Expense
+            expense = new Expense(id, desc, qty, price, cat, path);
+        }
+
+        cursor.close();
+        db.close();
+        return expense;
+    }
+
+
+    // --- PHƯƠNG THỨC XỬ LÝ USER (Giữ nguyên) ---
 
     public boolean addUser(String username, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -149,7 +174,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return count > 0;
     }
 
-    // (Bổ sung) Lấy ID người dùng (Cần thiết cho FK)
     public long getUserId(String username) {
         SQLiteDatabase db = this.getReadableDatabase();
         long userId = -1;

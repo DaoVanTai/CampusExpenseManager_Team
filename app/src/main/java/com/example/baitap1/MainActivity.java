@@ -28,9 +28,12 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
+    // ⭐ HẰNG SỐ MỚI: Dùng để nhận kết quả từ CreateNewTaskActivity ⭐
+    private static final int ADD_TASK_REQUEST = 1000;
+
     private Button btnCreate;
     private Button btnOpenAppData;
-    private Button btnRecurring; // MỚI: Nút Định kỳ
+    private Button btnRecurring;
     private Button btnStatistics;
     private Button btnViewChart;
     private ImageButton btnNotification;
@@ -45,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        appData = AppData.getInstance();
+        // ⭐ ĐÃ SỬA: Lấy AppData bằng Context (BẮT BUỘC) ⭐
+        appData = AppData.getInstance(getApplicationContext());
 
         // --- 1. Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App ---
         appData.checkAndAddRecurringExpenses();
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         // Ánh xạ View
         btnCreate = findViewById(R.id.btnCreate);
         btnOpenAppData = findViewById(R.id.btnOpenAppData);
-        btnRecurring = findViewById(R.id.btnRecurring); // MỚI: Ánh xạ nút
+        btnRecurring = findViewById(R.id.btnRecurring);
         btnStatistics = findViewById(R.id.btnStatistics);
         btnViewChart = findViewById(R.id.btnViewChart);
         btnNotification = findViewById(R.id.btnNotification);
@@ -66,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
         // --- Sự kiện Click ---
         btnCreate.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, CreateNewTaskActivity.class);
-            startActivity(intent);
+            // ⭐ ĐÃ SỬA: Dùng startActivityForResult để chờ tín hiệu làm mới ⭐
+            startActivityForResult(intent, ADD_TASK_REQUEST);
         });
 
         btnOpenAppData.setOnClickListener(v -> {
@@ -74,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // MỚI: Sự kiện mở màn hình RecurringExpenseActivity
         btnRecurring.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, RecurringExpenseActivity.class);
             startActivity(intent);
@@ -100,20 +104,31 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // ⭐ BỔ SUNG LOGIC: TRUYỀN ID CHI TIÊU THAY VÌ CHUỖI CONTENT ⭐
         lvTasks.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(MainActivity.this, editTask.class);
-            intent.putExtra("TASK_CONTENT", appData.taskList.get(position).toString());
+
+            // Lấy đối tượng Expense từ danh sách
+            Expense selectedExpense = appData.taskList.get(position);
+
+            // ⭐ TRUYỀN ID CỦA CHI TIÊU VÀO INTENT ⭐
+            intent.putExtra("EXPENSE_ID", selectedExpense.getId());
+
+            // Giữ lại vị trí nếu editTask.java vẫn cần nó
             intent.putExtra("TASK_POSITION", position);
+
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
+        // -------------------------------------------------------------
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // MỚI: Kiểm tra lại chi tiêu định kỳ khi quay lại màn hình này
-        // (đề phòng trường hợp vừa thêm quy tắc mới xong quay lại)
+        // ⭐ BƯỚC QUAN TRỌNG: LUÔN TẢI DỮ LIỆU MỚI NHẤT TỪ DB VÀO taskList ⭐
+        appData.loadTasksFromDatabase();
+
         appData.checkAndAddRecurringExpenses();
 
         if (adapter != null) {
@@ -124,10 +139,12 @@ public class MainActivity extends AppCompatActivity {
         checkSpendingLimit(totalSpending);
     }
 
+    // ⭐ PHƯƠNG THỨC ĐÃ SỬA: Xử lý kết quả trả về từ Activity khác ⭐
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // 1. Xử lý logic cập nhật sau khi chỉnh sửa
         if (requestCode == AppData.REQUEST_EDIT_TASK && resultCode == Activity.RESULT_OK && data != null) {
             int position = data.getIntExtra("TASK_POSITION", -1);
             String updatedContent = data.getStringExtra("UPDATED_TASK_CONTENT");
@@ -135,13 +152,21 @@ public class MainActivity extends AppCompatActivity {
                 Expense newExpense = parseExpenseFromString(updatedContent);
                 if (newExpense != null) {
                     appData.taskList.set(position, newExpense);
-                    adapter.notifyDataSetChanged();
+                    // onResume sẽ gọi notifyDataSetChanged() sau đó
                 } else {
                     Toast.makeText(this, "Lỗi cập nhật chi tiêu!", Toast.LENGTH_SHORT).show();
                 }
             }
         }
+
+        // 2. Xử lý logic sau khi THÊM MỚI (Từ CreateNewTaskActivity)
+        if (requestCode == ADD_TASK_REQUEST && resultCode == Activity.RESULT_OK) {
+            // Chỉ cần báo hiệu vì onResume() sẽ chạy ngay sau hàm này và gọi loadTasksFromDatabase()
+            Toast.makeText(this, "Chi tiêu mới đã được thêm thành công!", Toast.LENGTH_SHORT).show();
+        }
     }
+
+    // --- CÁC PHƯƠNG THỨC KHÁC GIỮ NGUYÊN ---
 
     private long calculateTotalSpending() {
         long total = 0;
@@ -152,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Expense parseExpenseFromString(String expenseString) {
+        // LƯU Ý: Nếu Expense Model có thay đổi (thêm ID, Path), logic này cần cập nhật.
         try {
             String description = expenseString.split(" - SL: ")[0].replace("Tên: ", "").trim();
             String quantityStr = expenseString.split(" - SL: ")[1].split(" - Giá:")[0].trim();
@@ -161,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
             int quantity = Integer.parseInt(quantityStr);
             long price = Long.parseLong(priceStr);
 
+            // Trả về constructor 4 tham số (giữ nguyên logic cũ)
             return new Expense(description, quantity, price, category);
         } catch (Exception e) {
             e.printStackTrace();

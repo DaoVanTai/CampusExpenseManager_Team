@@ -80,17 +80,42 @@
         app:layout_constraintStart_toEndOf="@+id/tvEditCategoryLabel"
         app:layout_constraintTop_toTopOf="@+id/tvEditCategoryLabel" />
 
+    <TextView
+        android:id="@+id/tvReceiptLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Biên Lai Đính Kèm:"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinnerEditCategory" />
+
+    <ImageView
+        android:id="@+id/ivReceiptImage"
+        android:layout_width="0dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="8dp"
+        android:background="#EEEEEE"
+        android:scaleType="centerCrop"
+        android:contentDescription="Ảnh biên lai chi tiêu đã lưu"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvReceiptLabel"
+        tools:src="@tools:sample/avatars" />
+
     <Button
         android:id="@+id/btnSubmitEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
         android:padding="12dp"
         android:text="LƯU CHỈNH SỬA"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerEditCategory" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintTop_toBottomOf="@+id/ivReceiptImage"
+        app:layout_constraintVertical_bias="0.9" /> </androidx.constraintlayout.widget.ConstraintLayout>
