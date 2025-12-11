@@ -17,7 +17,6 @@
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -81,20 +80,32 @@
         app:layout_constraintStart_toEndOf="@+id/tvCategoryLabel"
         app:layout_constraintTop_toTopOf="@+id/tvCategoryLabel" />
 
-    <!-- THÊM MỚI: Nút Chụp Biên Lai (YC 9) -->
+    <EditText
+        android:id="@+id/edtTaskDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Ngày giao dịch (YYYY-MM-DD)"
+        android:focusable="false"
+        android:clickable="true"
+        android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinnerCategory" />
+
     <Button
         android:id="@+id/btn_capture_receipt"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:drawableStart="@android:drawable/ic_menu_camera"
         android:drawablePadding="8dp"
         android:text="Chụp Biên Lai"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerCategory" />
+        app:layout_constraintTop_toBottomOf="@+id/edtTaskDate" />
 
-    <!-- THÊM MỚI: Xem trước Ảnh Biên Lai (YC 9) -->
     <ImageView
         android:id="@+id/iv_receipt_preview"
         android:layout_width="0dp"
@@ -117,6 +128,8 @@
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iv_receipt_preview"
+        app:layout_constraintVertical_bias="0.8" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

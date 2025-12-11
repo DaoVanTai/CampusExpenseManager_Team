@@ -12,6 +12,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.View; // ⭐ IMPORT ĐỂ LẤY VIEW HIỆN TẠI
+import android.view.inputmethod.InputMethodManager; // ⭐ IMPORT ĐỂ ẨN BÀN PHÍM
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,8 +24,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
-// ⭐ IMPORT MỚI CHO TÌM KIẾM ⭐
 import androidx.appcompat.widget.SearchView;
+
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
     private Button btnViewChart;
     private ImageButton btnNotification;
 
-    // ⭐ BIẾN MỚI CHO TÌM KIẾM ⭐
     private SearchView searchView;
 
     private ListView lvTasks;
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         btnNotification = findViewById(R.id.btnNotification);
         lvTasks = findViewById(R.id.lvTasks);
 
-        // ⭐ ÁNH XẠ THANH TÌM KIẾM ⭐
+        // Ánh xạ thanh tìm kiếm
         searchView = findViewById(R.id.searchView);
 
         // Adapter
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
 
-        // ⭐ SỰ KIỆN TÌM KIẾM ⭐
+        // --- SỰ KIỆN TÌM KIẾM ---
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -129,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                performSearch(newText); // Tìm ngay khi gõ
+                performSearch(newText); // Tìm ngay khi gõ (Real-time)
                 return false;
             }
         });
@@ -138,10 +139,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         // Load lại dữ liệu mỗi khi quay lại màn hình chính
-        // LƯU Ý: Nếu đang tìm kiếm dở thì không nên load lại tất cả,
-        // nhưng để đơn giản ta cứ load lại mới nhất, người dùng có thể gõ lại.
         appData.loadTasksFromDatabase();
         appData.checkAndAddRecurringExpenses();
 
@@ -159,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Xử lý cập nhật sau khi sửa
         if (requestCode == AppData.REQUEST_EDIT_TASK && resultCode == Activity.RESULT_OK && data != null) {
-            // onResume sẽ tự động load lại dữ liệu mới từ DB nên không cần set thủ công
+            // onResume sẽ tự động load lại dữ liệu mới từ DB
         }
 
         // Xử lý sau khi thêm mới
@@ -168,8 +166,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ⭐ HÀM THỰC HIỆN TÌM KIẾM ⭐
+    // ⭐ HÀM THỰC HIỆN TÌM KIẾM (ĐÃ THÊM LOGIC ẨN BÀN PHÍM) ⭐
     private void performSearch(String keyword) {
+        // 1. Ẩn bàn phím để người dùng nhìn thấy kết quả rõ hơn
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+
+        // 2. Logic tìm kiếm
         if (keyword == null || keyword.trim().isEmpty()) {
             // Nếu từ khóa rỗng, tải lại toàn bộ danh sách
             appData.loadTasksFromDatabase();
@@ -183,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
             appData.taskList.addAll(results);
         }
 
-        // Cập nhật giao diện ListView
+        // 3. Cập nhật giao diện ListView
         if (adapter != null) {
             adapter.notifyDataSetChanged();
         }

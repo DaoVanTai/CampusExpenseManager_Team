@@ -1,12 +1,20 @@
 package com.example.baitap1;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,27 +23,35 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public class editTask extends AppCompatActivity {
 
     private static final String TAG = "EditTaskActivity";
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    private static final int CAMERA_REQUEST_CODE = 201;
 
-    // Khai báo Database Helper
     private DatabaseHelper dbHelper;
 
-    // UI elements
-    private EditText edtEditTaskContent, edtEditTaskQuantity, edtEditTaskPrice;
+    private EditText edtEditTaskContent, edtEditTaskQuantity, edtEditTaskPrice, edtEditTaskDate;
     private Spinner spinnerEditCategory;
-    private Button btnSubmitEdit;
-
-    // UI elements cho Biên Lai
+    private Button btnSubmitEdit, btnRetakePhoto, btnDeletePhoto;
     private ImageView ivReceiptImage;
     private TextView tvReceiptLabel;
 
-    // Biến quan trọng
     private int currentExpenseId = -1;
-    private int taskPosition = -1;
     private String currentReceiptPath = null;
 
     @Override
@@ -45,170 +61,195 @@ public class editTask extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
-        // --- ÁNH XẠ UI ---
+        // Ánh xạ UI
         btnSubmitEdit = findViewById(R.id.btnSubmitEdit);
         edtEditTaskContent = findViewById(R.id.editTaskContent);
         edtEditTaskQuantity = findViewById(R.id.edtEditTaskQuantity);
         edtEditTaskPrice = findViewById(R.id.edtEditTaskPrice);
+        edtEditTaskDate = findViewById(R.id.edtEditTaskDate);
         spinnerEditCategory = findViewById(R.id.spinnerEditCategory);
 
-        // Ánh xạ UI cho Biên Lai
         ivReceiptImage = findViewById(R.id.ivReceiptImage);
         tvReceiptLabel = findViewById(R.id.tvReceiptLabel);
+        btnRetakePhoto = findViewById(R.id.btnRetakePhoto);
+        btnDeletePhoto = findViewById(R.id.btnDeletePhoto);
 
-        // Cấu hình Spinner Danh mục
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this, R.array.expense_categories, android.R.layout.simple_spinner_item
-        );
+                this, R.array.expense_categories, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerEditCategory.setAdapter(adapter);
 
-        // 1. Lấy ID và Tải dữ liệu từ Intent
         currentExpenseId = getIntent().getIntExtra("EXPENSE_ID", -1);
-        taskPosition = getIntent().getIntExtra("TASK_POSITION", -1);
 
         if (currentExpenseId != -1) {
-            loadExpenseDetails(currentExpenseId); // Tải dữ liệu từ DB lên giao diện
+            loadExpenseDetails(currentExpenseId);
         } else {
-            Toast.makeText(this, "Lỗi: Không tìm thấy ID chi tiêu.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi ID.", Toast.LENGTH_SHORT).show();
             finish();
         }
 
-        // 2. Xử lý nút Lưu/Submit
-        btnSubmitEdit.setOnClickListener(v -> saveEditedTask());
+        // --- CÁC SỰ KIỆN ---
+        btnSubmitEdit.setOnClickListener(v -> {
+            hideKeyboard();
+            saveEditedTask();
+        });
 
-        // Đặt mặc định ẩn ảnh biên lai lúc đầu
-        ivReceiptImage.setVisibility(View.GONE);
-        if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.GONE);
+        edtEditTaskDate.setOnClickListener(v -> showDatePicker());
+
+        btnRetakePhoto.setOnClickListener(v -> checkAndRequestPermissions());
+
+        btnDeletePhoto.setOnClickListener(v -> {
+            currentReceiptPath = null;
+            ivReceiptImage.setVisibility(View.GONE);
+            ivReceiptImage.setImageBitmap(null);
+            Toast.makeText(this, "Đã xóa ảnh (nhớ bấm Lưu để cập nhật)", Toast.LENGTH_SHORT).show();
+        });
     }
 
-    // --- PHƯƠNG THỨC TẢI CHI TIẾT TỪ DATABASE ---
     private void loadExpenseDetails(int id) {
         Expense expense = dbHelper.getExpenseById(id);
-
         if (expense != null) {
-            // Hiển thị các trường dữ liệu cũ
             edtEditTaskContent.setText(expense.getDescription());
             edtEditTaskQuantity.setText(String.valueOf(expense.getQuantity()));
             edtEditTaskPrice.setText(String.valueOf(expense.getAmount()));
 
-            // Đặt giá trị Spinner đúng với dữ liệu cũ
+            // ⭐ ĐÃ SỬA: Lấy ngày từ model (lỗi đỏ sẽ hết vì ta đã sửa Expense.java)
+            String date = expense.getDate();
+            if (date == null || date.isEmpty()) {
+                date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            }
+            edtEditTaskDate.setText(date);
+
             setSpinnerToValue(spinnerEditCategory, expense.getCategory());
 
-            // Lưu đường dẫn ảnh hiện tại vào biến tạm
             currentReceiptPath = expense.getReceiptPath();
-
-            // Hiển thị ảnh (nếu có)
-            if (ivReceiptImage != null) {
-                ivReceiptImage.post(() -> displayReceipt(currentReceiptPath));
-            }
-
-        } else {
-            Toast.makeText(this, "Lỗi: Không tìm thấy chi tiêu với ID này.", Toast.LENGTH_SHORT).show();
-            finish();
+            if (ivReceiptImage != null) ivReceiptImage.post(() -> displayReceipt(currentReceiptPath));
         }
     }
 
     private void displayReceipt(String photoPath) {
         if (photoPath != null && !photoPath.isEmpty()) {
-            if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.VISIBLE);
             ivReceiptImage.setVisibility(View.VISIBLE);
-
             try {
                 int targetW = ivReceiptImage.getWidth();
                 int targetH = ivReceiptImage.getHeight();
-
                 if (targetW <= 0) targetW = 300;
                 if (targetH <= 0) targetH = 150;
-
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(photoPath, bmOptions);
-
-                int photoW = bmOptions.outWidth;
-                int photoH = bmOptions.outHeight;
-                int scaleFactor = Math.max(1, Math.min(photoW / targetW, photoH / targetH));
-
+                int scaleFactor = Math.max(1, Math.min(bmOptions.outWidth / targetW, bmOptions.outHeight / targetH));
                 bmOptions.inJustDecodeBounds = false;
                 bmOptions.inSampleSize = scaleFactor;
-
                 Bitmap bitmap = BitmapFactory.decodeFile(photoPath, bmOptions);
                 ivReceiptImage.setImageBitmap(bitmap);
-
-            } catch (Exception e) {
-                Log.e(TAG, "Lỗi tải ảnh biên lai: " + e.getMessage());
-                ivReceiptImage.setVisibility(View.GONE);
-                Toast.makeText(this, "Không thể tải ảnh (File có thể đã bị xóa).", Toast.LENGTH_SHORT).show();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         } else {
-            if (tvReceiptLabel != null) tvReceiptLabel.setVisibility(View.GONE);
             ivReceiptImage.setVisibility(View.GONE);
         }
     }
 
-    // --- HÀM LƯU CHỈNH SỬA (Đã cập nhật logic gọi DB) ---
+    private void showDatePicker() {
+        Calendar cal = Calendar.getInstance();
+        try {
+            String[] parts = edtEditTaskDate.getText().toString().split("-");
+            if (parts.length == 3) cal.set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) - 1, Integer.parseInt(parts[2]));
+        } catch (Exception e) {}
+        new DatePickerDialog(this, (view, year, month, day) -> {
+            String date = String.format(Locale.getDefault(), "%d-%02d-%02d", year, month + 1, day);
+            edtEditTaskDate.setText(date);
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+    }
+
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
     private void saveEditedTask() {
         String name = edtEditTaskContent.getText().toString().trim();
         String quantityStr = edtEditTaskQuantity.getText().toString().trim();
         String priceStr = edtEditTaskPrice.getText().toString().trim();
         String category = spinnerEditCategory.getSelectedItem().toString();
+        String date = edtEditTaskDate.getText().toString().trim();
 
-        // Kiểm tra dữ liệu hợp lệ
-        if (name.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập tên chi tiêu!", Toast.LENGTH_SHORT).show();
+        if (name.isEmpty() || currentExpenseId == -1) {
+            Toast.makeText(this, "Dữ liệu lỗi!", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        if (currentExpenseId == -1) {
-            Toast.makeText(this, "Lỗi: Không xác định được ID chi tiêu!", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
         try {
             int quantity = Integer.parseInt(quantityStr);
             long price = Long.parseLong(priceStr);
 
-            // ⭐ GỌI HÀM UPDATE TRONG DATABASE HELPER ⭐
-            // Ta truyền lại currentReceiptPath (ảnh cũ) vì tính năng sửa ảnh chưa có
+            // ⭐ GỌI HÀM UPDATE MỚI (CÓ THAM SỐ DATE) ⭐
             boolean isUpdated = dbHelper.updateExpense(
                     currentExpenseId,
                     name,
                     quantity,
                     price,
                     category,
+                    date,  // Truyền ngày vào đây
                     currentReceiptPath
             );
 
             if (isUpdated) {
-                Toast.makeText(this, "Đã cập nhật thành công!", Toast.LENGTH_SHORT).show();
-
-                // Trả kết quả về MainActivity để làm mới danh sách
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("UPDATED_TASK_CONTENT",
-                        String.format("Tên: %s - SL: %d - Giá: %d - DM: %s", name, quantity, price, category));
-
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish(); // Đóng Activity
+                Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+                setResult(Activity.RESULT_OK);
+                finish();
             } else {
-                Toast.makeText(this, "Lỗi: Không thể cập nhật vào cơ sở dữ liệu.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Lỗi update DB.", Toast.LENGTH_SHORT).show();
             }
-
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Số lượng hoặc giá phải là số hợp lệ!", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Đã xảy ra lỗi không mong muốn.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Lỗi nhập liệu.", Toast.LENGTH_SHORT).show();
         }
     }
 
+    // --- LOGIC CAMERA ---
+    private void checkAndRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CODE);
+        } else { dispatchTakePictureIntent(); }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            dispatchTakePictureIntent();
+        }
+    }
+    private void dispatchTakePictureIntent() {
+        Intent take = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (take.resolveActivity(getPackageManager()) != null) {
+            File f = null;
+            try {
+                String time = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                f = File.createTempFile("RECEIPT_" + time + "_", ".jpg", dir);
+                currentReceiptPath = f.getAbsolutePath();
+            } catch (IOException e) {}
+            if (f != null) {
+                Uri uri = FileProvider.getUriForFile(this, "com.example.baitap1.fileprovider", f);
+                take.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(take, CAMERA_REQUEST_CODE);
+            }
+        }
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CAMERA_REQUEST_CODE && resultCode == RESULT_OK) {
+            displayReceipt(currentReceiptPath);
+        }
+    }
     private void setSpinnerToValue(Spinner spinner, String value) {
         ArrayAdapter adapter = (ArrayAdapter) spinner.getAdapter();
         if (adapter != null) {
             for (int i = 0; i < adapter.getCount(); i++) {
                 if (adapter.getItem(i).toString().equalsIgnoreCase(value)) {
-                    spinner.setSelection(i);
-                    return;
+                    spinner.setSelection(i); return;
                 }
             }
         }

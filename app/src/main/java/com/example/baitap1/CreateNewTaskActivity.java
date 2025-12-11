@@ -2,6 +2,9 @@ package com.example.baitap1;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,6 +15,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,7 +25,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog; // ⭐ IMPORT MỚI
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -30,6 +34,7 @@ import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -42,7 +47,7 @@ public class CreateNewTaskActivity extends AppCompatActivity {
     private String currentPhotoPath = null;
     private long loggedInUserId = 1L;
 
-    private EditText edtTaskName, edtTaskQuantity, edtTaskPrice;
+    private EditText edtTaskName, edtTaskQuantity, edtTaskPrice, edtTaskDate; // ⭐ Thêm edtTaskDate
     private Spinner spinnerCategory;
     private Button btnSubmitCreate, btnCapture;
     private ImageView ivReceiptPreview;
@@ -60,6 +65,7 @@ public class CreateNewTaskActivity extends AppCompatActivity {
         edtTaskName = findViewById(R.id.edtTaskName);
         edtTaskQuantity = findViewById(R.id.edtTaskQuantity);
         edtTaskPrice = findViewById(R.id.edtTaskPrice);
+        edtTaskDate = findViewById(R.id.edtTaskDate); // ⭐ Ánh xạ ô ngày
         btnSubmitCreate = findViewById(R.id.btnSubmitCreate);
         spinnerCategory = findViewById(R.id.spinnerCategory);
         btnCapture = findViewById(R.id.btn_capture_receipt);
@@ -71,18 +77,61 @@ public class CreateNewTaskActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
 
+        // ⭐ Set ngày mặc định là hôm nay
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        edtTaskDate.setText(today);
+
+        // ⭐ Sự kiện chọn ngày
+        edtTaskDate.setOnClickListener(v -> showDatePicker());
+
         btnCapture.setOnClickListener(v -> checkAndRequestPermissions());
-        btnSubmitCreate.setOnClickListener(v -> checkLimitAndSave()); // ⭐ SỬA SỰ KIỆN CLICK ⭐
+        btnSubmitCreate.setOnClickListener(v -> {
+            hideKeyboard(); // ⭐ Ẩn bàn phím trước khi xử lý
+            checkLimitAndSave();
+        });
 
         ivReceiptPreview.setVisibility(View.GONE);
     }
 
-    // ⭐ HÀM MỚI: KIỂM TRA HẠN MỨC TRƯỚC KHI LƯU ⭐
+    // ⭐ HÀM HIỆN LỊCH CHỌN NGÀY ⭐
+    private void showDatePicker() {
+        Calendar cal = Calendar.getInstance();
+        // Lấy ngày hiện tại đang hiển thị trong ô (nếu có) để set cho lịch
+        try {
+            String[] parts = edtTaskDate.getText().toString().split("-");
+            if (parts.length == 3) {
+                cal.set(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]) - 1, Integer.parseInt(parts[2]));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, year, month, dayOfMonth) -> {
+                    // Format thành yyyy-MM-dd để lưu vào DB chuẩn
+                    String date = String.format(Locale.getDefault(), "%d-%02d-%02d", year, month + 1, dayOfMonth);
+                    edtTaskDate.setText(date);
+                },
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.show();
+    }
+
+    // ⭐ HÀM ẨN BÀN PHÍM (YC C) ⭐
+    private void hideKeyboard() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
     private void checkLimitAndSave() {
         String description = edtTaskName.getText().toString().trim();
         String quantityStr = edtTaskQuantity.getText().toString().trim();
         String priceStr = edtTaskPrice.getText().toString().trim();
         String category = spinnerCategory.getSelectedItem().toString();
+        // ⭐ Lấy ngày từ ô nhập liệu thay vì new Date()
+        String date = edtTaskDate.getText().toString().trim();
 
         if (description.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập Tên Vật Phẩm.", Toast.LENGTH_SHORT).show();
@@ -94,38 +143,28 @@ public class CreateNewTaskActivity extends AppCompatActivity {
             long unitPrice = priceStr.isEmpty() ? 0 : Long.parseLong(priceStr);
             long newAmount = quantity * unitPrice;
 
-            // 1. Kiểm tra xem danh mục này có giới hạn không
             long limit = dbHelper.getCategoryLimit(category);
-
             if (limit > 0) {
-                // 2. Tính tổng tiền hiện tại của danh mục này trong DB
                 long currentTotal = dbHelper.getTotalSpentByCategory(category);
-
-                // 3. So sánh
                 if (currentTotal + newAmount > limit) {
-                    // Cảnh báo người dùng
                     new AlertDialog.Builder(this)
                             .setTitle("⚠️ VƯỢT HẠN MỨC DANH MỤC")
-                            .setMessage("Chi tiêu này sẽ khiến danh mục '" + category + "' vượt quá giới hạn " + limit + " VNĐ.\n\n(Hiện tại: " + currentTotal + " + Mới: " + newAmount + ")")
-                            .setPositiveButton("Vẫn lưu", (dialog, which) -> saveExpenseDirectly(description, quantity, unitPrice, category))
+                            .setMessage("Cảnh báo: Chi tiêu này vượt quá giới hạn " + limit + " VNĐ.")
+                            .setPositiveButton("Vẫn lưu", (dialog, which) -> saveExpenseDirectly(description, quantity, unitPrice, category, date))
                             .setNegativeButton("Hủy", null)
                             .show();
-                    return; // Dừng lại, đợi người dùng chọn
+                    return;
                 }
             }
-
-            // Nếu không vượt hạn mức, lưu luôn
-            saveExpenseDirectly(description, quantity, unitPrice, category);
+            saveExpenseDirectly(description, quantity, unitPrice, category, date);
 
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Số liệu không hợp lệ.", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // ⭐ HÀM LƯU CHI TIÊU (Tách ra từ hàm saveExpense cũ) ⭐
-    private void saveExpenseDirectly(String description, int quantity, long unitPrice, String category) {
-        String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
+    private void saveExpenseDirectly(String description, int quantity, long unitPrice, String category, String date) {
+        // Không gọi new Date() nữa, dùng biến date truyền vào
         boolean isInserted = dbHelper.addExpense(
                 loggedInUserId,
                 description,
@@ -137,11 +176,11 @@ public class CreateNewTaskActivity extends AppCompatActivity {
         );
 
         if (isInserted) {
-            Toast.makeText(this, "Đã lưu giao dịch thành công!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Đã lưu giao dịch!", Toast.LENGTH_LONG).show();
             setResult(RESULT_OK);
             finish();
         } else {
-            Toast.makeText(this, "Lỗi khi lưu giao dịch vào DB.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Lỗi lưu DB.", Toast.LENGTH_LONG).show();
         }
     }
 

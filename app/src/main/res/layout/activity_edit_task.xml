@@ -80,18 +80,60 @@
         app:layout_constraintStart_toEndOf="@+id/tvEditCategoryLabel"
         app:layout_constraintTop_toTopOf="@+id/tvEditCategoryLabel" />
 
+    <EditText
+        android:id="@+id/edtEditTaskDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Ngày giao dịch (YYYY-MM-DD)"
+        android:focusable="false"
+        android:clickable="true"
+        android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinnerEditCategory" />
+
     <TextView
         android:id="@+id/tvReceiptLabel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:text="Biên Lai Đính Kèm:"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerEditCategory" />
+        app:layout_constraintTop_toBottomOf="@+id/edtEditTaskDate" />
+
+    <LinearLayout
+        android:id="@+id/layoutImageActions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvReceiptLabel">
+
+        <Button
+            android:id="@+id/btnRetakePhoto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Chụp lại"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btnDeletePhoto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Xóa ảnh"
+            android:backgroundTint="#D32F2F"
+            android:textColor="#FFF"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/ivReceiptImage"
@@ -100,11 +142,10 @@
         android:layout_marginTop="8dp"
         android:background="#EEEEEE"
         android:scaleType="centerCrop"
-        android:contentDescription="Ảnh biên lai chi tiêu đã lưu"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvReceiptLabel"
+        app:layout_constraintTop_toBottomOf="@+id/layoutImageActions"
         tools:src="@tools:sample/avatars" />
 
     <Button
@@ -118,4 +159,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ivReceiptImage"
-        app:layout_constraintVertical_bias="0.9" /> </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintVertical_bias="0.9" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
