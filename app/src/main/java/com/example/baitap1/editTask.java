@@ -84,7 +84,8 @@ public class editTask extends AppCompatActivity {
         if (currentExpenseId != -1) {
             loadExpenseDetails(currentExpenseId);
         } else {
-            Toast.makeText(this, "Lỗi ID.", Toast.LENGTH_SHORT).show();
+            // ⭐ THAY THẾ CHUỖI CỨNG
+            Toast.makeText(this, getString(R.string.error_id_not_found), Toast.LENGTH_SHORT).show();
             finish();
         }
 
@@ -102,7 +103,8 @@ public class editTask extends AppCompatActivity {
             currentReceiptPath = null;
             ivReceiptImage.setVisibility(View.GONE);
             ivReceiptImage.setImageBitmap(null);
-            Toast.makeText(this, "Đã xóa ảnh (nhớ bấm Lưu để cập nhật)", Toast.LENGTH_SHORT).show();
+            // ⭐ THAY THẾ CHUỖI CỨNG
+            Toast.makeText(this, getString(R.string.msg_photo_deleted), Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -113,7 +115,6 @@ public class editTask extends AppCompatActivity {
             edtEditTaskQuantity.setText(String.valueOf(expense.getQuantity()));
             edtEditTaskPrice.setText(String.valueOf(expense.getAmount()));
 
-            // ⭐ ĐÃ SỬA: Lấy ngày từ model (lỗi đỏ sẽ hết vì ta đã sửa Expense.java)
             String date = expense.getDate();
             if (date == null || date.isEmpty()) {
                 date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -177,33 +178,36 @@ public class editTask extends AppCompatActivity {
         String date = edtEditTaskDate.getText().toString().trim();
 
         if (name.isEmpty() || currentExpenseId == -1) {
-            Toast.makeText(this, "Dữ liệu lỗi!", Toast.LENGTH_SHORT).show();
+            // ⭐ THAY THẾ CHUỖI CỨNG
+            Toast.makeText(this, getString(R.string.error_data_invalid), Toast.LENGTH_SHORT).show();
             return;
         }
         try {
             int quantity = Integer.parseInt(quantityStr);
             long price = Long.parseLong(priceStr);
 
-            // ⭐ GỌI HÀM UPDATE MỚI (CÓ THAM SỐ DATE) ⭐
             boolean isUpdated = dbHelper.updateExpense(
                     currentExpenseId,
                     name,
                     quantity,
                     price,
                     category,
-                    date,  // Truyền ngày vào đây
+                    date,
                     currentReceiptPath
             );
 
             if (isUpdated) {
-                Toast.makeText(this, "Cập nhật thành công!", Toast.LENGTH_SHORT).show();
+                // ⭐ THAY THẾ CHUỖI CỨNG
+                Toast.makeText(this, getString(R.string.msg_update_success), Toast.LENGTH_SHORT).show();
                 setResult(Activity.RESULT_OK);
                 finish();
             } else {
-                Toast.makeText(this, "Lỗi update DB.", Toast.LENGTH_SHORT).show();
+                // ⭐ THAY THẾ CHUỖI CỨNG
+                Toast.makeText(this, getString(R.string.error_save_db), Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Toast.makeText(this, "Lỗi nhập liệu.", Toast.LENGTH_SHORT).show();
+            // ⭐ THAY THẾ CHUỖI CỨNG
+            Toast.makeText(this, getString(R.string.error_number_invalid), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -213,13 +217,18 @@ public class editTask extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CODE);
         } else { dispatchTakePictureIntent(); }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             dispatchTakePictureIntent();
+        } else {
+            // ⭐ THAY THẾ CHUỖI CỨNG
+            Toast.makeText(this, getString(R.string.perm_camera_required), Toast.LENGTH_SHORT).show();
         }
     }
+
     private void dispatchTakePictureIntent() {
         Intent take = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (take.resolveActivity(getPackageManager()) != null) {
@@ -237,6 +246,7 @@ public class editTask extends AppCompatActivity {
             }
         }
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -244,6 +254,7 @@ public class editTask extends AppCompatActivity {
             displayReceipt(currentReceiptPath);
         }
     }
+
     private void setSpinnerToValue(Spinner spinner, String value) {
         ArrayAdapter adapter = (ArrayAdapter) spinner.getAdapter();
         if (adapter != null) {

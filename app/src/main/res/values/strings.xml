@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Baitap1</string>
+
     <string-array name="expense_categories">
         <item>Thực phẩm</item>
         <item>Di chuyển</item>
@@ -8,4 +9,49 @@
         <item>Thuê nhà</item>
         <item>Khác</item>
     </string-array>
+
+    <string name="login_success">Đăng nhập thành công!</string>
+    <string name="login_fail">Sai tên đăng nhập hoặc mật khẩu!</string>
+    <string name="register_success">Đăng ký thành công! Hãy đăng nhập.</string>
+    <string name="error_input_empty">Vui lòng nhập đủ thông tin!</string>
+    <string name="error_password_mismatch">Mật khẩu nhập lại không khớp!</string>
+    <string name="account_not_found">Chưa có tài khoản nào! Vui lòng đăng ký trước.</string>
+    <string name="error_system_hash">Lỗi hệ thống: Không thể mã hóa mật khẩu.</string>
+
+    <string name="msg_save_success">Đã lưu giao dịch thành công!</string>
+    <string name="msg_update_success">Cập nhật thành công!</string>
+    <string name="error_save_db">Lỗi khi lưu vào cơ sở dữ liệu.</string>
+    <string name="error_data_invalid">Dữ liệu không hợp lệ!</string>
+    <string name="error_id_not_found">Lỗi: Không tìm thấy ID.</string>
+
+    <string name="warning_limit_title">⚠️ VƯỢT HẠN MỨC</string>
+    <string name="warning_cat_limit_msg">Cảnh báo: Chi tiêu này vượt quá giới hạn đã đặt.</string>
+    <string name="action_continue">Vẫn lưu</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="add_task_success">Thêm chi tiêu thành công!</string>
+    <string name="noti_limit_title">CẢNH BÁO CHI TIÊU</string>
+    <string name="noti_limit_msg_exceed">Đã vượt hạn mức (%d VNĐ)!</string> <string name="noti_limit_msg_warning">Sắp hết hạn mức (%d / %d)</string>
+    <string name="dialog_limit_title">Cài đặt hạn mức chi tiêu/ngày</string>
+    <string name="dialog_limit_hint">Nhập số tiền (VD: 500000)</string>
+
+    <string name="error_name_empty">Vui lòng nhập Tên Vật Phẩm.</string>
+    <string name="error_number_invalid">Số Lượng và Đơn Giá phải là số hợp lệ.</string>
+    <string name="perm_camera_required">Cần quyền truy cập Camera để chụp ảnh!</string>
+    <string name="msg_photo_deleted">Đã xóa ảnh (Nhớ bấm Lưu để cập nhật).</string>
+    <string name="dialog_cat_limit_title">⚠️ VƯỢT HẠN MỨC DANH MỤC</string>
+    <string name="dialog_cat_limit_msg">Chi tiêu này vượt quá giới hạn %d VNĐ.</string>
+
+    <string name="error_list_empty">Danh sách trống, không có gì để xuất!</string>
+    <string name="msg_export_error">Lỗi khi xuất file: %s</string>
+    <string name="email_subject">Báo cáo Chi Tiêu</string>
+    <string name="email_body">Gửi bạn file danh sách chi tiêu từ ứng dụng.</string>
+    <string name="chooser_title">Chia sẻ file Excel qua:</string>
+    <string name="msg_delete_all">Đã xóa toàn bộ!</string>
+    <string name="msg_delete_selected">Đã xóa mục đã chọn</string>
+    <string name="msg_select_to_delete">Vui lòng chọn mục để xóa</string>
+
+    <string name="text_limit_current">Hạn mức NGÀY: %d VNĐ</string>
+    <string name="text_limit_not_set">Chưa thiết lập hạn mức ngày.</string>
+    <string name="msg_limit_updated">Đã cập nhật hạn mức: %d</string>
+
 </resources>

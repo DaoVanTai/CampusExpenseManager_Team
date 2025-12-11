@@ -14,7 +14,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private EditText etUser, etPass;
     private Button btnLogin;
-    private TextView tvRegister; // Nút chuyển trang đăng ký
+    private TextView tvRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +26,6 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         tvRegister = findViewById(R.id.tvGoToRegister);
 
-        // 1. Xử lý nút Chuyển sang Đăng ký
         tvRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -35,31 +34,37 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        // 2. Xử lý Đăng nhập (Lấy dữ liệu đã lưu để so sánh)
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String inputUser = etUser.getText().toString().trim();
                 String inputPass = etPass.getText().toString().trim();
 
-                // Lấy dữ liệu mật khẩu đã lưu trong máy ra
                 SharedPreferences prefs = getSharedPreferences("UserAuth", MODE_PRIVATE);
-                String savedUser = prefs.getString("USERNAME", ""); // Mặc định là rỗng nếu chưa có
-                String savedPass = prefs.getString("PASSWORD", "");
+                String savedUser = prefs.getString("USERNAME", "");
+                String savedPassHash = prefs.getString("PASSWORD", "");
 
                 if (savedUser.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "Chưa có tài khoản nào! Vui lòng đăng ký trước.", Toast.LENGTH_LONG).show();
+                    // ⭐ THAY ĐỔI 1: Dùng getString(R.string.account_not_found)
+                    Toast.makeText(LoginActivity.this, getString(R.string.account_not_found), Toast.LENGTH_LONG).show();
                 } else {
-                    // So sánh dữ liệu nhập vào với dữ liệu đã lưu
-                    if (inputUser.equals(savedUser) && inputPass.equals(savedPass)) {
-                        Toast.makeText(LoginActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
+                    String inputPassHash = SecurityUtils.hashPassword(inputPass);
 
-                        // Chuyển vào MainActivity
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish(); // Đóng Login lại để không back về được
+                    if (inputPassHash != null) {
+                        if (inputUser.equals(savedUser) && inputPassHash.equals(savedPassHash)) {
+                            // ⭐ THAY ĐỔI 2: Dùng getString(R.string.login_success)
+                            Toast.makeText(LoginActivity.this, getString(R.string.login_success), Toast.LENGTH_SHORT).show();
+
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // ⭐ THAY ĐỔI 3: Dùng getString(R.string.login_fail)
+                            Toast.makeText(LoginActivity.this, getString(R.string.login_fail), Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(LoginActivity.this, "Sai tên đăng nhập hoặc mật khẩu!", Toast.LENGTH_SHORT).show();
+                        // ⭐ THAY ĐỔI 4: Dùng getString(R.string.error_system_hash)
+                        Toast.makeText(LoginActivity.this, getString(R.string.error_system_hash), Toast.LENGTH_SHORT).show();
                     }
                 }
             }

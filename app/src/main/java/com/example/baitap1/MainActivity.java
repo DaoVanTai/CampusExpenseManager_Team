@@ -11,10 +11,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.InputType;
-import android.view.View; // ⭐ IMPORT ĐỂ LẤY VIEW HIỆN TẠI
-import android.view.inputmethod.InputMethodManager; // ⭐ IMPORT ĐỂ ẨN BÀN PHÍM
-import android.widget.ArrayAdapter;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -23,27 +24,29 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.NotificationCompat;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int ADD_TASK_REQUEST = 1000;
 
-    private Button btnCreate;
-    private Button btnOpenAppData;
-    private Button btnRecurring;
-    private Button btnStatistics;
-    private Button btnViewChart;
+    private Button btnCreate, btnOpenAppData, btnRecurring, btnStatistics, btnViewChart;
     private ImageButton btnNotification;
-
     private SearchView searchView;
-
     private ListView lvTasks;
-    private ArrayAdapter<Expense> adapter;
+
+    // Sử dụng Adapter tùy chỉnh (đã tối ưu hiển thị ảnh)
+    private ExpenseAdapter adapter;
     private AppData appData;
+
+    // Bộ công cụ xử lý đa luồng (Tránh giật lag UI)
+    private ExecutorService executorService;
+    private Handler mainHandler;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -51,9 +54,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Khởi tạo luồng
+        executorService = Executors.newSingleThreadExecutor();
+        mainHandler = new Handler(Looper.getMainLooper());
+
         appData = AppData.getInstance(getApplicationContext());
 
-        // Gọi hàm kiểm tra chi tiêu định kỳ ngay khi mở App
+        // Kiểm tra chi tiêu định kỳ ngay khi mở app
         appData.checkAndAddRecurringExpenses();
 
         // --- ÁNH XẠ VIEW ---
@@ -64,73 +71,44 @@ public class MainActivity extends AppCompatActivity {
         btnViewChart = findViewById(R.id.btnViewChart);
         btnNotification = findViewById(R.id.btnNotification);
         lvTasks = findViewById(R.id.lvTasks);
-
-        // Ánh xạ thanh tìm kiếm
         searchView = findViewById(R.id.searchView);
 
-        // Adapter
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, appData.taskList);
+        // Khởi tạo Adapter
+        adapter = new ExpenseAdapter(this, R.layout.item_expense, appData.taskList);
         lvTasks.setAdapter(adapter);
 
-        // --- SỰ KIỆN CLICK CÁC NÚT CHỨC NĂNG ---
-        btnCreate.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, CreateNewTaskActivity.class);
-            startActivityForResult(intent, ADD_TASK_REQUEST);
-        });
-
-        btnOpenAppData.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, AppDataActivity.class);
-            startActivity(intent);
-        });
-
-        btnRecurring.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RecurringExpenseActivity.class);
-            startActivity(intent);
-        });
-
-        btnStatistics.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, StatisticsActivity.class);
-            startActivity(intent);
-        });
-
-        btnViewChart.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SpendingChartActivity.class);
-            startActivity(intent);
-        });
-
-        btnNotification.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, NotificationActivity.class);
-            startActivity(intent);
-        });
+        // --- SỰ KIỆN CLICK ---
+        btnCreate.setOnClickListener(v -> startActivityForResult(new Intent(this, CreateNewTaskActivity.class), ADD_TASK_REQUEST));
+        btnOpenAppData.setOnClickListener(v -> startActivity(new Intent(this, AppDataActivity.class)));
+        btnRecurring.setOnClickListener(v -> startActivity(new Intent(this, RecurringExpenseActivity.class)));
+        btnStatistics.setOnClickListener(v -> startActivity(new Intent(this, StatisticsActivity.class)));
+        btnViewChart.setOnClickListener(v -> startActivity(new Intent(this, SpendingChartActivity.class)));
+        btnNotification.setOnClickListener(v -> startActivity(new Intent(this, NotificationActivity.class)));
 
         btnNotification.setOnLongClickListener(v -> {
             showSetLimitDialog();
             return true;
         });
 
-        // Xử lý click vào item để sửa
         lvTasks.setOnItemClickListener((parent, view, position, id) -> {
             Intent intent = new Intent(MainActivity.this, editTask.class);
             Expense selectedExpense = appData.taskList.get(position);
-
-            // Truyền ID sang màn hình sửa
             intent.putExtra("EXPENSE_ID", selectedExpense.getId());
             intent.putExtra("TASK_POSITION", position);
-
             startActivityForResult(intent, AppData.REQUEST_EDIT_TASK);
         });
 
-        // --- SỰ KIỆN TÌM KIẾM ---
+        // Sự kiện tìm kiếm
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                performSearch(query); // Tìm khi bấm Enter
+                performSearch(query);
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                performSearch(newText); // Tìm ngay khi gõ (Real-time)
+                performSearch(newText);
                 return false;
             }
         });
@@ -139,63 +117,49 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Load lại dữ liệu mỗi khi quay lại màn hình chính
-        appData.loadTasksFromDatabase();
-        appData.checkAndAddRecurringExpenses();
-
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
-
-        long totalSpending = calculateTotalSpending();
-        checkSpendingLimit(totalSpending);
+        // Load dữ liệu dưới nền để không làm đơ màn hình
+        loadDataInBackground();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    private void loadDataInBackground() {
+        executorService.execute(() -> {
+            // 1. Luồng phụ: Tải dữ liệu nặng
+            appData.loadTasksFromDatabase();
+            appData.checkAndAddRecurringExpenses();
+            long total = calculateTotalSpending();
 
-        // Xử lý cập nhật sau khi sửa
-        if (requestCode == AppData.REQUEST_EDIT_TASK && resultCode == Activity.RESULT_OK && data != null) {
-            // onResume sẽ tự động load lại dữ liệu mới từ DB
-        }
-
-        // Xử lý sau khi thêm mới
-        if (requestCode == ADD_TASK_REQUEST && resultCode == Activity.RESULT_OK) {
-            Toast.makeText(this, "Chi tiêu mới đã được thêm thành công!", Toast.LENGTH_SHORT).show();
-        }
+            // 2. Luồng chính: Cập nhật giao diện
+            mainHandler.post(() -> {
+                if (adapter != null) adapter.notifyDataSetChanged();
+                checkSpendingLimit(total);
+            });
+        });
     }
 
-    // ⭐ HÀM THỰC HIỆN TÌM KIẾM (ĐÃ THÊM LOGIC ẨN BÀN PHÍM) ⭐
     private void performSearch(String keyword) {
-        // 1. Ẩn bàn phím để người dùng nhìn thấy kết quả rõ hơn
+        // Ẩn bàn phím
         View view = this.getCurrentFocus();
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
 
-        // 2. Logic tìm kiếm
-        if (keyword == null || keyword.trim().isEmpty()) {
-            // Nếu từ khóa rỗng, tải lại toàn bộ danh sách
-            appData.loadTasksFromDatabase();
-        } else {
-            // Nếu có từ khóa, gọi DatabaseHelper để tìm
-            DatabaseHelper dbHelper = new DatabaseHelper(this);
-            List<Expense> results = dbHelper.searchExpenses(keyword.trim());
+        executorService.execute(() -> {
+            // Tìm kiếm dưới nền
+            if (keyword == null || keyword.trim().isEmpty()) {
+                appData.loadTasksFromDatabase();
+            } else {
+                DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+                List<Expense> results = dbHelper.searchExpenses(keyword.trim());
+                appData.taskList.clear();
+                appData.taskList.addAll(results);
+            }
 
-            // Cập nhật danh sách hiển thị
-            appData.taskList.clear();
-            appData.taskList.addAll(results);
-        }
-
-        // 3. Cập nhật giao diện ListView
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
+            mainHandler.post(() -> {
+                if (adapter != null) adapter.notifyDataSetChanged();
+            });
+        });
     }
-
-    // --- CÁC HÀM HỖ TRỢ KHÁC (Giữ nguyên) ---
 
     private long calculateTotalSpending() {
         long total = 0;
@@ -207,21 +171,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void showSetLimitDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Cài đặt hạn mức chi tiêu/ngày");
+        // ⭐ Thay thế chuỗi cứng bằng Resource String
+        builder.setTitle(getString(R.string.dialog_limit_title));
+
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        input.setHint("Nhập số tiền (VD: 500000)");
+        // ⭐ Thay thế chuỗi cứng
+        input.setHint(getString(R.string.dialog_limit_hint));
+
+        long current = getLimit();
+        if (current > 0) input.setText(String.valueOf(current));
+
         builder.setView(input);
         builder.setPositiveButton("Lưu", (dialog, which) -> {
             String text = input.getText().toString();
             if (!text.isEmpty()) {
                 long limit = Long.parseLong(text);
                 saveLimit(limit);
+                // ⭐ Thay thế chuỗi cứng (Dùng format string %d)
+                String msg = getString(R.string.msg_limit_updated, limit); // Cần đảm bảo strings.xml có dòng này hoặc dùng chuỗi ghép
+                // Nếu chưa có %d trong strings.xml cho msg_limit_updated, bạn có thể dùng tạm: "Đã đặt hạn mức: " + limit
                 Toast.makeText(MainActivity.this, "Đã đặt hạn mức: " + limit, Toast.LENGTH_SHORT).show();
+
                 checkSpendingLimit(calculateTotalSpending());
             }
         });
-        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton("Hủy", null);
         builder.show();
     }
 
@@ -239,19 +214,24 @@ public class MainActivity extends AppCompatActivity {
         long limit = getLimit();
         if (limit == 0) return;
         long warningThreshold = (long) (limit * 0.9);
+
         if (currentDailyTotal >= limit) {
-            sendNotification("CẢNH BÁO CHI TIÊU!", "Đã vượt hạn mức ("+limit+")!");
+            // ⭐ Thay thế chuỗi cứng: Cảnh báo vượt mức
+            String msg = getString(R.string.noti_limit_msg_exceed, limit);
+            sendNotification(getString(R.string.noti_limit_title), msg);
         } else if (currentDailyTotal >= warningThreshold) {
-            sendNotification("Nhắc nhở", "Sắp hết hạn mức (" + currentDailyTotal + "/" + limit + ")");
+            // ⭐ Thay thế chuỗi cứng: Cảnh báo sắp hết
+            String msg = getString(R.string.noti_limit_msg_warning, currentDailyTotal, limit);
+            sendNotification("Nhắc nhở", msg);
         }
     }
 
     private void sendNotification(String title, String message) {
         String channelId = "expense_limit_channel";
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, "Hạn mức chi tiêu", NotificationManager.IMPORTANCE_HIGH);
-            notificationManager.createNotificationChannel(channel);
+            NotificationChannel channel = new NotificationChannel(channelId, "Hạn mức", NotificationManager.IMPORTANCE_HIGH);
+            nm.createNotificationChannel(channel);
         }
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
@@ -263,6 +243,15 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("NOTI_MESSAGE", message);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         builder.setContentIntent(pendingIntent);
-        notificationManager.notify(1, builder.build());
+        nm.notify(1, builder.build());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ADD_TASK_REQUEST && resultCode == Activity.RESULT_OK) {
+            // ⭐ Thay thế chuỗi cứng
+            Toast.makeText(this, getString(R.string.add_task_success), Toast.LENGTH_SHORT).show();
+        }
     }
 }

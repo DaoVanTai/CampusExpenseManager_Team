@@ -1,4 +1,4 @@
-package com.example.baitap1; // Sửa lại package của bạn
+package com.example.baitap1;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -33,19 +33,30 @@ public class RegisterActivity extends AppCompatActivity {
                 String rePass = etRePass.getText().toString().trim();
 
                 if (user.isEmpty() || pass.isEmpty()) {
-                    Toast.makeText(RegisterActivity.this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
+                    // ⭐ THAY ĐỔI 1: Dùng resource string
+                    Toast.makeText(RegisterActivity.this, getString(R.string.error_input_empty), Toast.LENGTH_SHORT).show();
                 } else if (!pass.equals(rePass)) {
-                    Toast.makeText(RegisterActivity.this, "Mật khẩu nhập lại không khớp!", Toast.LENGTH_SHORT).show();
+                    // ⭐ THAY ĐỔI 2: Dùng resource string
+                    Toast.makeText(RegisterActivity.this, getString(R.string.error_password_mismatch), Toast.LENGTH_SHORT).show();
                 } else {
-                    // --- LƯU TÀI KHOẢN VÀO MÁY ---
-                    SharedPreferences prefs = getSharedPreferences("UserAuth", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString("USERNAME", user);
-                    editor.putString("PASSWORD", pass);
-                    editor.apply(); // Lưu xong
+                    // Mã hóa mật khẩu
+                    String hashedPassword = SecurityUtils.hashPassword(pass);
 
-                    Toast.makeText(RegisterActivity.this, "Đăng ký thành công! Hãy đăng nhập.", Toast.LENGTH_SHORT).show();
-                    finish(); // Đóng màn hình đăng ký để quay về Login
+                    if (hashedPassword != null) {
+                        // Lưu vào SharedPreferences
+                        SharedPreferences prefs = getSharedPreferences("UserAuth", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("USERNAME", user);
+                        editor.putString("PASSWORD", hashedPassword);
+                        editor.apply();
+
+                        // ⭐ THAY ĐỔI 3: Dùng resource string
+                        Toast.makeText(RegisterActivity.this, getString(R.string.register_success), Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        // Thay thế luôn thông báo lỗi hệ thống cho đồng bộ
+                        Toast.makeText(RegisterActivity.this, getString(R.string.error_system_hash), Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
